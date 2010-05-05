@@ -26,7 +26,7 @@ object Sourced extends RestHelper with Auth {
           sig, org, S.hostAndPath, src
         ) match {
           case true => {
-            SrcStore + (S.hostAndPath -> S.get("file").get)
+            SrcStore + (S.hostAndPath -> src)
             CreatedResponse(<created>{S.hostAndPath}</created>, "text/html")
           }
           case _ => UnauthorizedResponse(S.hostAndPath)
