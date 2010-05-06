@@ -9,7 +9,6 @@ A Simple server for Sxr Docs
 ### TODO 
 
 * Generate app engine template file via sbt action
-* Lift request body extrator?
 * Stores
 * Deploy Steps
 
