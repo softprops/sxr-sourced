@@ -4,39 +4,38 @@ import net.liftweb.http._
 import net.liftweb.http.rest._
 
 /** Sourced - serving scala for the _good_ of mankind **/
-object Sourced extends RestHelper with Auth {
+object Sourced extends RestHelper with Responses with UrlHelpers with Auth {
   import net.liftweb.json._
   import net.liftweb.common._
-  
-  /** A `looser` html response for source documents */
-  case class SrcResponse(src: String, headers: List[(String, String)], code: Int) extends LiftResponse {
-    def toResponse = {
-      val bytes = src.getBytes("UTF-8")
-      InMemoryResponse(bytes, ("Content-Length", bytes.length.toString) :: ("Content-Type", "text/html; charset=utf-8") :: headers, Nil, code)
-    }
-  }
+  import net.liftweb.util.Helpers.tryo
+  import scala.io.Source.{ fromInputStream => <<< }
+  import java.io.ByteArrayInputStream
   
   serve {
-    case Req(org :: project :: version :: srcName :: _, "html", PutRequest) =>
+    // PUT /<org-id>/<project-name>/<version>/<sourcename>.html
+    case req @Req(org :: project :: version :: srcName :: _, "html", PutRequest) =>
+      lazy val body = req.body.map(b => <<<(new ByteArrayInputStream(b)))
       for {
-        sig <- S.param("sig") ?~ "sig required" ~> 400
-        src <- S.param("file") ?~ "src body required" ~> 400
-      } yield {
+        sig <- req.param("sig") ?~ "sig required" ~> 400
+        file <- body
+        val lns = file.getLines.mkString("")
+        src <- (if(lns.isEmpty) Empty else Full(lns)) ?~ "src required" ~> 400
+        url <- Full(url(req))
+      } yield 
         authorize(
-          sig, org, S.hostAndPath, src
+          sig, org, url, src
         ) match {
           case true => {
-            SrcStore + (S.hostAndPath -> src)
-            CreatedResponse(<created>{S.hostAndPath}</created>, "text/html")
+            SrcStore + (url -> src)
+            SrcCreatedResponse(url, "text/html")
           }
-          case _ => UnauthorizedResponse(S.hostAndPath)
+          case _ => UnauthorizedResponse(url)
         }
-      }
-
-    case Req(org :: project :: version :: srcName :: _, "html", GetRequest) =>
-      SrcStore(S.hostAndPath) match {
+    // GET /<org-id>/<project-name>/<version>/<sourcename>.html
+    case req @Req(org :: project :: version :: srcName :: _, "html", GetRequest) =>
+      SrcStore(url(req)) match {
         case Some(src) => SrcResponse(src, Nil, 200)
-        case _ => NotFoundResponse("%s not found" format S.hostAndPath)
+        case _ => NotFoundResponse("%s not found" format url(req))
       }
   }
 }
