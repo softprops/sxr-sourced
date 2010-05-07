@@ -1,6 +1,6 @@
 package implicitly
 
-case class Token(secret: String, salt: String)
+case class Token(secret: String)
 
 object OrgStore  {
   var cache = Map.empty[String, Token]
