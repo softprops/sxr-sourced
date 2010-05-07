@@ -15,7 +15,7 @@ trait Auth {
   def sign(token: Token, path: String, content: String) = {
     val secret = token.secret
     val key = new crypto.spec.SecretKeySpec(bytes(secret), SHA1)
-    val msg = (secret :: path :: content :: Nil) mkString ""
+    val msg = (path :: content :: Nil) mkString ""
     val sig = {
       val mac = crypto.Mac.getInstance(SHA1)
       mac.init(key)
