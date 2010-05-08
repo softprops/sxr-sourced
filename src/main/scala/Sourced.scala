@@ -32,10 +32,11 @@ object Sourced extends RestHelper with Responses with UrlHelpers with Auth {
           case _ => UnauthorizedResponse(url)
         }
     // GET /<org-id>/<project-name>/<version>/<sourcename>.html
-    case req @Req(org :: project :: version :: srcName :: _, "html", GetRequest) =>
+    case req @Req(org :: project :: version :: srcName :: _, ".scala.html", GetRequest) =>
       SrcStore(url(req)) match {
         case Some(src) => SrcResponse(src, Nil, 200)
         case _ => NotFoundResponse("%s not found" format url(req))
       }
+    case _ => NotFoundResponse("not found")
   }
 }
