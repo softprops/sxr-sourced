@@ -5,10 +5,10 @@ trait Responses {
   import net.liftweb.http._
   
   /** A `looser` html response for source documents */
-  case class SrcResponse(src: String, headers: List[(String, String)], code: Int) extends LiftResponse {
+  case class SrcResponse(src: String, contentType: String, headers: List[(String, String)], code: Int) extends LiftResponse {
     def toResponse = {
       val bytes = src.getBytes("UTF-8")
-      InMemoryResponse(bytes, ("Content-Length", bytes.length.toString) :: ("Content-Type", "text/html; charset=utf-8") :: headers, Nil, code)
+      InMemoryResponse(bytes, ("Content-Length", bytes.length.toString) :: ("Content-Type", contentType) :: headers, Nil, code)
     }
   }
   /** Empty created response with location header */
