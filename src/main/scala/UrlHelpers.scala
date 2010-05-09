@@ -18,6 +18,5 @@ trait UrlHelpers { this: RestHelper =>
       case (sch, port) => sch + "://" + r.serverName + ":" + port + req.contextPath
     }) openOr ""
 
-  def url(req: Req) =
-    (hostAndPath(req) :: req.path.partPath.mkString("/") :: Nil).mkString("/") + "." + req.path.suffix
+  def url(req: Req) = (hostAndPath(req) :: req.path.wholePath).mkString("/")
 }
