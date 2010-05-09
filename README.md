@@ -45,5 +45,6 @@ stop with
 ### See Also
 * [sxr-publish](http://github.com/n8han/sxr-publish)
 * [browse](http://github.com/harrah/browse)
+* [sbt-appengine](http://github.com/Yasushi/sbt-appengine-plugin)
 
 Doug Tangren 2010 (softprops)
