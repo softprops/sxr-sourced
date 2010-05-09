@@ -32,7 +32,7 @@ object Sourced extends RestHelper with Responses with UrlHelpers with Auth {
     // GET /<org-id>/<project-name>/<version>/<sourcename>.html
     case req @Req(org :: project :: version :: srcName :: _, _, GetRequest) =>
       SrcStore(url(req)) match {
-        case Some(src) => SrcResponse(src.doc, Nil, 200)
+        case Some(src) => SrcResponse(src.doc.getValue, Nil, 200)
         case _ => NotFoundResponse("%s not found" format url(req))
       }
     case req @ _ => NotFoundResponse("%s not found" format url(req))
