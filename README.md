@@ -26,7 +26,7 @@ Clone this project
     
 ### Starting and Stopping
 
-Withing sbt
+Within sbt
 
 start with
 
