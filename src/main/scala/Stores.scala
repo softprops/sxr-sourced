@@ -1,6 +1,5 @@
 package implicitly
  
-import implicitly.jdo._
 import javax.jdo.annotations._
 
 @PersistenceCapable{val identityType = IdentityType.APPLICATION, val detachable="true"}
