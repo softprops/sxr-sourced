@@ -6,7 +6,6 @@ class Project(info: ProjectInfo) extends DefaultWebProject(info) {
   
   // testing
   val specs = "org.scala-tools.testing" % "specs" % "1.6.2.1-SNAPSHOT" % "test"
-  val jettytester = "org.mortbay.jetty" % "jetty-servlet-tester" % "7.0.0pre3" % "test->default"
   
   // required because Ivy doesn't pull repositories from poms
   val smackRepo = "m2-repository-smack" at "http://maven.reucon.com/public"
