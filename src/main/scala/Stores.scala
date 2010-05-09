@@ -23,7 +23,7 @@ class Doc() {
   var doc : String = ""
 }
 
-object OrgStore extends JdoStore[OrgToken] {
+object OrgStore extends JdoStore[Token] {
   override val domainCls = classOf[Token]
   type KeyClass = String
   def apply(key:String) = get(key)
