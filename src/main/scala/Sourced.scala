@@ -14,18 +14,16 @@ object Sourced extends RestHelper with Responses with UrlHelpers with Auth {
   serve {
     // PUT /<org-id>/<project-name>/<version>/<sourcename>.html
     case req @Req(org :: project :: version :: srcName :: Nil, _, PutRequest) =>
-      lazy val body = req.body.map(b => <<<(new ByteArrayInputStream(b)))
       for {
         sig <- req.param("sig") ?~ "sig required" ~> 400
-        file <- body
-        val lns = file.getLines.mkString("")
-        src <- (if(lns.isEmpty) Empty else Full(lns)) ?~ "src required" ~> 400
+        body <- req.body ?~ "src required" ~> 400
         url <- Full(url(req))
       } yield 
         authorize(
-          sig, org, url, src
+          sig, org, url, body
         ) match {
           case true => {
+            val src = <<<(new ByteArrayInputStream(body)).getLines.mkString
             SrcStore + (url -> src)
             SrcCreatedResponse(url, "text/html")
           }
