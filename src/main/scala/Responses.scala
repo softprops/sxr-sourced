@@ -4,7 +4,7 @@ package implicitly
 trait Responses {
   import net.liftweb.http._
   
-  /** A `looser` html response for source documents */
+  /** A `looser` response for source documents */
   case class SrcResponse(src: String, contentType: String, headers: List[(String, String)], code: Int) extends LiftResponse {
     def toResponse = {
       val bytes = src.getBytes("UTF-8")
