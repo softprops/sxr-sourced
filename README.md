@@ -38,9 +38,7 @@ stop with
 
 ### TODO 
 
-* Generate app engine template file via sbt action
-* Stores
-* Deploy Steps
+* admin feature
 
 ### See Also
 * [sxr-publish](http://github.com/n8han/sxr-publish)
