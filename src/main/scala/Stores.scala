@@ -13,7 +13,7 @@ class Token() {
   var secret: String = ""
   
   @Persistent
-  var created: java.util.Date = new java.util.Date()
+  var createdAt: java.util.Date = new java.util.Date()
 }
 
 @PersistenceCapable{val identityType = IdentityType.APPLICATION, val detachable="true"}
@@ -26,7 +26,7 @@ class Doc() {
   var doc: BigString = new BigString("")
   
   @Persistent
-   var created: java.util.Date = new java.util.Date()
+   var createdAt: java.util.Date = new java.util.Date()
 }
 
 object OrgStore extends JdoStore[Token] {
@@ -42,7 +42,6 @@ object OrgStore extends JdoStore[Token] {
 }
 
 object SrcStore extends JdoStore[Doc] {
-  
   override val domainCls = classOf[Doc]
   type KeyClass = String
   def apply(key: String) = get(key)
