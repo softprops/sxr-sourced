@@ -13,7 +13,7 @@ object Sourced extends RestHelper with Responses with UrlHelpers with Auth {
   
   serve {
     // PUT /<org-id>/<project-name>/<version>/<sourcename>.html
-    case req @Req(org :: project :: version :: srcName :: _, ".scala.html", PutRequest) =>
+    case req @Req(org :: project :: version :: srcName :: Nil, "html" | "js", PutRequest) =>
       lazy val body = req.body.map(b => <<<(new ByteArrayInputStream(b)))
       for {
         sig <- req.param("sig") ?~ "sig required" ~> 400
