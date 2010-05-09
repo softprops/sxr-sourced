@@ -13,7 +13,7 @@ object Sourced extends RestHelper with Responses with UrlHelpers with Auth {
   
   serve {
     // PUT /<org-id>/<project-name>/<version>/<sourcename>.html
-    case req @Req(org :: project :: version :: srcName :: _, ".scala.html", PutRequest) =>
+    case req @Req(org :: project :: version :: srcName :: Nil, _, PutRequest) =>
       lazy val body = req.body.map(b => <<<(new ByteArrayInputStream(b)))
       for {
         sig <- req.param("sig") ?~ "sig required" ~> 400
@@ -32,11 +32,11 @@ object Sourced extends RestHelper with Responses with UrlHelpers with Auth {
           case _ => UnauthorizedResponse(url)
         }
     // GET /<org-id>/<project-name>/<version>/<sourcename>.html
-    case req @Req(org :: project :: version :: srcName :: _, ".scala.html", GetRequest) =>
+    case req @Req(org :: project :: version :: srcName :: _, _, GetRequest) =>
       SrcStore(url(req)) match {
-        case Some(src) => SrcResponse(src, Nil, 200)
+        case Some(src) => SrcResponse(src.doc, Nil, 200)
         case _ => NotFoundResponse("%s not found" format url(req))
       }
-    case _ => NotFoundResponse("not found")
+    case req @ _ => NotFoundResponse("%s not found" format url(req))
   }
 }
