@@ -11,6 +11,9 @@ class Token() {
 
   @Persistent
   var secret: String = ""
+  
+  @Persistent
+  var created: java.util.Date = new java.util.Date()
 }
 
 @PersistenceCapable{val identityType = IdentityType.APPLICATION, val detachable="true"}
@@ -21,6 +24,9 @@ class Doc() {
 
   @Persistent
   var doc: BigString = new BigString("")
+  
+  @Persistent
+   var created: java.util.Date = new java.util.Date()
 }
 
 object OrgStore extends JdoStore[Token] {
