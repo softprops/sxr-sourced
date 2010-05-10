@@ -47,6 +47,24 @@ object Sourced extends RestHelper with Responses with UrlHelpers with Auth {
         case Some(src) => SrcResponse(src.doc.getValue, contentType(src.url), Nil, 200)
         case _ => NotFoundResponse("%s not found" format url(req))
       }
+    case req @Req("admin" :: Nil, _, GetRequest) => adminResponse(
+      <html><body>
+        <form action="setkey" method="post">
+          <input type="text" name="orgId" />
+          <input type="submit" />
+        </form>
+      </body></html>
+    )
+    case req @Req("setkey" :: Nil, _, PostRequest) => 
+      for {
+        orgId <- req.param("orgId") ?~ "sig required" ~> 400
+      } yield {
+        val key = generateKey
+        OrgStore + (orgId, key)
+        adminResponse(
+          <html><body> { key } </body></html>
+        )
+      }
     case req @ _ => NotFoundResponse("%s not found" format url(req))
   }
 }

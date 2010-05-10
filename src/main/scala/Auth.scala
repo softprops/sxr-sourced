@@ -5,6 +5,7 @@ trait Auth {
   import javax.crypto
    
   val SHA1 = "HmacSHA1"
+  lazy val random = new scala.util.Random
   
   def authorize(sig: String, orgId: String, path: String, content: Array[Byte]) =
     OrgStore(orgId) match { 
@@ -20,5 +21,10 @@ trait Auth {
     mac.init(key)
     mac.update(path)
     new String(encodeBase64(mac.doFinal(content)))
+  }
+  def generateKey = {
+    val ary = new Array[Byte](30)
+    random.nextBytes(ary)
+    new String(encodeBase64(ary, false))
   }
 }

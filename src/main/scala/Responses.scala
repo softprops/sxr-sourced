@@ -15,4 +15,6 @@ trait Responses {
   case class SrcCreatedResponse(loc: String, mime: String) extends LiftResponse {
     def toResponse = InMemoryResponse(Array(), ("Location" -> loc) :: ("Content-Type" -> mime) :: Nil, Nil, 201)
   }
+  def adminResponse(out: scala.xml.Node) =
+    XhtmlResponse(out, net.liftweb.common.Empty, List("Content-Type" -> "text/html; charset=utf-8"), Nil, 200, false)
 }
