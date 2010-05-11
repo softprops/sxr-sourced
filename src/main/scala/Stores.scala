@@ -33,10 +33,10 @@ object OrgStore extends JdoStore[Token] {
   override val domainCls = classOf[Token]
   type KeyClass = String
   def apply(key: String) = get(key)
-  def + (kv: (String, Token)) = {
+  def + (orgId: String, orgKey: String) = {
     val t = new Token
-    t.org = kv._1
-    t.secret = kv._2.secret
+    t.org = orgId
+    t.secret = orgKey
     save(t)
   }
 }
