@@ -65,6 +65,6 @@ object Sourced extends RestHelper with Responses with UrlHelpers with Auth {
           <html><body> { key } </body></html>
         }
       }
-    case req @ _ => NotFoundResponse("%s not found" format url(req))
+    case req => NotFoundResponse("%s not found" format url(req))
   }
 }
