@@ -1,7 +1,7 @@
 package implicitly
 
 /** Custom Response types */
-trait Responses {
+trait Responses { this: UrlHelpers =>
   import net.liftweb.http._
   import net.liftweb.http.provider.servlet.HTTPRequestServlet
   
@@ -17,14 +17,9 @@ trait Responses {
     def toResponse = InMemoryResponse(Array(), ("Location" -> loc) :: ("Content-Type" -> mime) :: Nil, Nil, 201)
   }
   def adminPage(req: Req)(out: => scala.xml.Node) = {
-    import net.liftweb.common.Full
-    req.request match {
-      case r: HTTPRequestServlet if r.req.getUserPrincipal != null => 
-        println(r.req.getUserPrincipal.getName)
-        XhtmlResponse(out, net.liftweb.common.Empty, List("Content-Type" -> "text/html; charset=utf-8"), Nil, 200, false)
-      case _ => 
-        val svc = com.google.appengine.api.users.UserServiceFactory.getUserService
-        RedirectResponse(svc.createLoginURL("http://localhost:8080/admin"))
-    }
+    val svc = com.google.appengine.api.users.UserServiceFactory.getUserService
+    if (svc.isUserLoggedIn && svc.isUserAdmin)
+      XhtmlResponse(out, net.liftweb.common.Empty, List("Content-Type" -> "text/html; charset=utf-8"), Nil, 200, false)
+    else RedirectResponse(svc.createLoginURL(url(req)))
   }
 }
