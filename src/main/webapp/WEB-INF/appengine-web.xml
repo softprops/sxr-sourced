@@ -3,4 +3,7 @@
   <application>implicit-ly</application>
   <version>1</version>
   <sessions-enabled>false</sessions-enabled>
+  <system-properties>
+    <property name="in.gae.j" value="true" />
+  </system-properties>
 </appengine-web-app>
