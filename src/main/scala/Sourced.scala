@@ -25,7 +25,7 @@ object Sourced extends RestHelper with Responses with UrlHelpers with RequestHel
           case true => {
             val src = <<<(new ByteArrayInputStream(body)).getLines.mkString
             SrcStore + (url -> src)
-            SrcCreatedResponse(url, "text/html")
+            SrcCreatedResponse(url, contentType(url))
           }
           case _ => UnauthorizedResponse(url)
         }
