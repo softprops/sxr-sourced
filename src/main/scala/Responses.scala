@@ -13,13 +13,19 @@ trait Responses { this: UrlHelpers =>
     }
   }
   /** Empty created response with location header */
-  case class SrcCreatedResponse(loc: String, mime: String) extends LiftResponse {
-    def toResponse = InMemoryResponse(Array(), ("Location" -> loc) :: ("Content-Type" -> mime) :: Nil, Nil, 201)
+  case class SrcCreatedResponse(loc: String, contentType: String) extends LiftResponse {
+    def toResponse = InMemoryResponse(Array(), ("Location" -> loc) :: ("Content-Type" -> contentType) :: Nil, Nil, 201)
   }
+  
   def adminPage(req: Req)(out: => scala.xml.Node) = {
     val svc = com.google.appengine.api.users.UserServiceFactory.getUserService
     if (svc.isUserLoggedIn && svc.isUserAdmin)
-      XhtmlResponse(out, net.liftweb.common.Empty, List("Content-Type" -> "text/html; charset=utf-8"), Nil, 200, false)
+      XhtmlResponse(adminTemplate(out, svc.createLogoutURL(url(req))), net.liftweb.common.Empty, List("Content-Type" -> "text/html; charset=utf-8"), Nil, 200, false)
     else RedirectResponse(svc.createLoginURL(url(req)))
   }
+  
+  def adminTemplate(content: => scala.xml.Node, outUrl: String) = <html>
+    <head><title>implicit.ly sourced</title><link rel="stylesheet" type="text/css" href="/css/implicitly.css"/></head>
+    <body><div id="header"><div id="auth"><a href={outUrl}>Logout</a></div></div><div id="container">{content}</div></body>
+  </html>
 }
