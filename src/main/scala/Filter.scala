@@ -1,4 +1,5 @@
 package implicitly
+
 import javax.servlet.{ServletRequest, ServletResponse, FilterChain}
 import javax.servlet.http.HttpServletRequest
 

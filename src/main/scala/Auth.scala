@@ -22,6 +22,7 @@ trait Auth {
     mac.update(path)
     new String(encodeBase64(mac.doFinal(content)))
   }
+  
   def generateKey = {
     val ary = new Array[Byte](30)
     random.nextBytes(ary)
