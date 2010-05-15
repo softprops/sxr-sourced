@@ -3,8 +3,10 @@ package implicitly
 import net.liftweb.http._
 import net.liftweb.http.rest._
 
+import stores.{DocStore, OrgStore}
+
 /** Sourced - serving scala for the _good_ of mankind **/
-object Sourced extends RestHelper with Responses with UrlHelpers with RequestHelpers with Auth {
+object Sourced extends RestHelper with Responses with Urls with Requests with Auth {
   import net.liftweb.json._
   import net.liftweb.common._
   import net.liftweb.util.Helpers.tryo
@@ -12,7 +14,6 @@ object Sourced extends RestHelper with Responses with UrlHelpers with RequestHel
   import java.io.ByteArrayInputStream
   
   serve {
-    // PUT /<org-id>/<project-name>/<version>/<sourcename>.html
     case req @Req(org :: project :: version :: srcName :: Nil, _, PutRequest) =>
       for {
         sig <- req.param("sig") ?~ "sig required" ~> 400
@@ -24,14 +25,13 @@ object Sourced extends RestHelper with Responses with UrlHelpers with RequestHel
         ) match {
           case true => {
             val src = <<<(new ByteArrayInputStream(body)).getLines.mkString
-            SrcStore + (url -> src)
+            DocStore + (url -> src)
             SrcCreatedResponse(url, contentType(url))
           }
           case _ => UnauthorizedResponse(url)
         }
-    // GET /<org-id>/<project-name>/<version>/<sourcename>.html
     case req @Req(org :: project :: version :: srcName :: _, _, GetRequest) =>
-      SrcStore(url(req)) match {
+      DocStore(url(req)) match {
         case Some(src) => SrcResponse(src.doc.getValue, contentType(src.url), Nil, 200)
         case _ => NotFoundResponse("%s not found" format url(req))
       }

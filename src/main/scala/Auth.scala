@@ -1,5 +1,8 @@
 package implicitly
 
+import stores.OrgStore
+import models.Token
+
 trait Auth {
   import org.apache.commons.codec.binary.Base64.encodeBase64
   import javax.crypto

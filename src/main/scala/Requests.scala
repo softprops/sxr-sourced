@@ -1,6 +1,6 @@
 package implicitly
 
-trait RequestHelpers {
+trait Requests {
   import net.liftweb.http.{Req, LiftResponse}
   import net.liftweb.http.provider.HTTPRequest
   import net.liftweb.http.provider.servlet.HTTPRequestServlet
@@ -18,5 +18,5 @@ trait RequestHelpers {
   }
   
   def containerRequest(r: Req): Box[HTTPRequest] =
-       Full(r).flatMap(r => Box !! r.request)
+    Full(r).flatMap(r => Box !! r.request)
 }

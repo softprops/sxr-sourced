@@ -1,44 +1,8 @@
-package implicitly
+package implicitly.stores.jdo
 
 import javax.jdo.{JDOHelper, PersistenceManagerFactory, PersistenceManager}
 
 import com.google.appengine.api.datastore.{Key, KeyFactory}
-
-trait Managed {
-  def manager: PersistenceManager
-}
-
-object ManagerFactory {
-  lazy val get = JDOHelper.getPersistenceManagerFactory("transactions-optional")
-}
-
-trait DefaultManager extends Managed {
-  private lazy val fact = ManagerFactory get
-  def manager = fact getPersistenceManager
-  def withManager[T](fn: PersistenceManager => T): T = {
-    val pm = manager
-    try {
-      fn(pm)
-    } finally {
-      pm.close
-    }
-  }
-}
-
-/** Interface for for a KeyClass -> V store */
-trait Store[V] {
-  val domainCls: Class[V]
-  
-  type KeyClass
-  
-  def save(v: V)
-
-  def get(k: KeyClass): Option[V]
-  
-  def update(k: KeyClass, fn: Option[V] => Any)
-  
-  def delete(k: KeyClass)
-}
 
 /** KeyClass key to V value */
 trait JdoStore[V] extends Store[V] with DefaultManager {

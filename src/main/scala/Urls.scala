@@ -3,7 +3,7 @@ package implicitly
 import net.liftweb.http.rest._
 
 /** Provides S.*-like helpers to `stateless` dispatchers */
-trait UrlHelpers { self: RequestHelpers =>
+trait Urls { self: Requests =>
   import net.liftweb.http.Req
   
   def hostAndPath(req:Req) =

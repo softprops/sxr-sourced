@@ -1,7 +1,7 @@
 package implicitly
 
 /** Custom Response types */
-trait Responses { this: UrlHelpers =>
+trait Responses { this: Urls =>
   import net.liftweb.http._
   import net.liftweb.http.provider.servlet.HTTPRequestServlet
   
