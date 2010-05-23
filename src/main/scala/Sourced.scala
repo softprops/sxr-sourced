@@ -3,9 +3,6 @@ package implicitly
 import unfiltered.request._
 import unfiltered.response._
 
-
-
-
 /** Sourced - serving scala for the _good_ of mankind **/
 class Sourced extends Responses with Urls with Requests with Auth with IO with unfiltered.Plan {
   import scala.io.Source.{ fromBytes => <<< }
@@ -66,8 +63,7 @@ class Sourced extends Responses with Urls with Requests with Auth with IO with u
         case req: Req if req.getRequestURI.startsWith("/_ah/") =>
           Pass
       }
-  
-      //case req => NotFound
+      
   }
 }
 
