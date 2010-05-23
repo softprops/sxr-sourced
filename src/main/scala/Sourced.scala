@@ -1,56 +1,78 @@
 package implicitly
 
-import net.liftweb.http._
-import net.liftweb.http.rest._
+import unfiltered.request._
+import unfiltered.response._
 
-import stores.{DocStore, OrgStore}
+
+
 
 /** Sourced - serving scala for the _good_ of mankind **/
-object Sourced extends RestHelper with Responses with Urls with Requests with Auth {
-  import net.liftweb.json._
-  import net.liftweb.common._
-  import net.liftweb.util.Helpers.tryo
-  import scala.io.Source.{ fromInputStream => <<< }
-  import java.io.ByteArrayInputStream
+class Sourced extends Responses with Urls with Requests with Auth with IO with unfiltered.Plan {
+  import scala.io.Source.{ fromBytes => <<< }
+  import stores.{DocStore, OrgStore}
+  import javax.servlet.http.{HttpServletRequest => Req}
   
-  serve {
-    case req @Req(org :: project :: version :: srcName :: Nil, _, PutRequest) =>
-      for {
-        sig <- req.param("sig") ?~ "sig required" ~> 400
-        body <- req.body ?~ "src required" ~> 400
-        url <- Full(url(req))
-      } yield 
-        authorize(
-          sig, org, url, body
-        ) match {
-          case true => {
-            val src = <<<(new ByteArrayInputStream(body)).getLines.mkString
-            DocStore + (url -> src)
-            SrcCreatedResponse(url, contentType(url))
+  def filter = {
+    
+    case PUT(Path(Seg(org :: project :: version :: srcName :: _), req)) => 
+      req.getParameter("sig") match {
+        case null => Status(400) ~> ResponseString("sig required")
+        case sig => {
+          bytes(req.getInputStream) match {
+            case arr: Array[Byte] if arr.isEmpty => Status(400) ~> ResponseString("request body required")
+            case body => {
+              val uri = url(req)
+              authorize(
+                sig, org, uri, body
+              ) match {
+                case true => {
+                  val src = <<<(body).mkString
+                  DocStore + (uri -> src)
+                  Status(201) ~> ContentType(contentType(uri)) ~> ResponseString(src)
+                }
+                case _ => Status(401)
+              }
+            }
           }
-          case _ => UnauthorizedResponse(url)
-        }
-    case req @Req(org :: project :: version :: srcName :: _, _, GetRequest) =>
-      DocStore(url(req)) match {
-        case Some(src) => SrcResponse(src.doc.getValue, contentType(src.url), Nil, 200)
-        case _ => NotFoundResponse("%s not found" format url(req))
-      }
-    case req @Req("admin" :: Nil, _, GetRequest) => adminPage(req) {
-        <form action="setkey" method="post">
-          <input type="text" name="orgId" />
-          <input type="submit" value="Generate Token" />
-        </form>
-    }
-    case req @Req("setkey" :: Nil, _, PostRequest) => 
-      for {
-        orgId <- req.param("orgId") ?~ "sig required" ~> 400
-      } yield {
-        adminPage(req) {
-          val key = generateKey
-          OrgStore + (orgId, key)
-          <div> { key } </div>
         }
       }
-    case req => NotFoundResponse("%s not found" format url(req))
+  
+      case GET(Path(Seg(org :: project :: version :: srcName :: _), req)) =>
+        DocStore(url(req)) match {
+          case Some(src) => Status(200) ~> ResponseString(src.doc.getValue) ~> ContentType(contentType(src.url))
+          case _ => NotFound
+        }
+    
+      case GET(Path(Seg("admin" ::  Nil), req)) => adminPage(req) {
+          <form action="setkey" method="post">
+            <input type="text" name="orgId" />
+            <input type="submit" value="Generate Token" />
+          </form>
+        }
+  
+      case POST(Path(Seg("setkey" :: Nil), req)) =>
+        req.getParameter("orgId") match {
+          case null => Status(400) ~> ResponseString("orgId required")
+          case orgId => {
+            val key = generateKey
+            OrgStore + (orgId, key)
+            adminPage(req) {
+              <div> { key } </div>
+            }
+          }
+        }
+  
+      case GET(r) => r match {
+        case req: Req if req.getRequestURI.startsWith("/_ah/") =>
+          Pass
+      }
+  
+      //case req => NotFound
+  }
+}
+
+object SourcedServer {
+  def main(args: Array[String]) {
+    unfiltered.server.Http(8080).filter(new Sourced).start
   }
 }

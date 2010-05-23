@@ -1,17 +1,17 @@
 package implicitly
 
-import net.liftweb.http.rest._
+//import net.liftweb.http.rest._
 
 /** Provides S.*-like helpers to `stateless` dispatchers */
 trait Urls { self: Requests =>
-  import net.liftweb.http.Req
+  import javax.servlet.http.{HttpServletRequest => Req}
   
-  def hostAndPath(req:Req) =
-    containerRequest(req).map(r => (r.scheme, r.serverPort) match {
-      case ("http", 80) => "http://" + r.serverName + req.contextPath
-      case ("https", 443) => "https://" + r.serverName + req.contextPath
-      case (sch, port) => sch + "://" + r.serverName + ":" + port + req.contextPath
-    }) openOr ""
+  def hostAndPath(r: Req) =
+      (r.getScheme, r.getServerPort) match {
+       case ("http", 80) => "http://" + r.getServerName + r.getServletPath
+       case ("https", 443) => "https://" + r.getServerName + r.getServletPath
+       case (sch, port) => sch + "://" + r.getServerName + ":" + port + r.getServletPath
+     }
 
-  def url(req: Req) = (hostAndPath(req) :: req.path.wholePath).mkString("/")
+  def url(r: Req) = hostAndPath(r)
 }

@@ -11,6 +11,10 @@ class Project(info: ProjectInfo) extends AppengineProject(info) with DataNucleus
   // web
   val jetty7 = "org.eclipse.jetty" % "jetty-webapp" % "7.0.2.RC0" % "test"
   
+  // unfiltered
+  val uf = "net.databinder" %% "unfiltered" % "0.1.1-SNAPSHOT"
+  val ufs = "net.databinder" %% "unfiltered-server" % "0.1.1-SNAPSHOT"
+  
   // lift
   val lift = "net.liftweb" % "lift-webkit" % "2.0-M5"
   
