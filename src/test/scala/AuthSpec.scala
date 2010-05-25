@@ -10,7 +10,7 @@ object AuthSpec extends Specification with Auth {
       val content = scala.io.Source.fromFile(
         new java.io.File("src/test/resources/linked.js")
       ).getLines.mkString("").getBytes
-      val sig = "Trd0QZEjE60a%2FcQUI2a5575JY2I%3D"
+      val sig = java.net.URLDecoder.decode("Trd0QZEjE60a%2FcQUI2a5575JY2I%3D")
       sign(secret, path, content) must_== sig
     }
   }
