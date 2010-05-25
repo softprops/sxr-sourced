@@ -1,14 +1,17 @@
 package implicitly
 
 import org.specs._
-
-object AuthSpec extends Specification {
+ 
+object AuthSpec extends Specification with Auth {
   "Auth" should {
-    "authorize a valid org" in {
-      
-    }
-    "not authorize an invalid org" in {
-      
+    "sign a request" in {
+      val secret = "09vy9uOblAm/XNpJXWqtCuOmPnog93P2UsuVPEs"
+      val path = "http://localhost:8080/us.technically.spde/spde-core/0.3.1-SNAPSHOT/linked.js"
+      val content = scala.io.Source.fromFile(
+        new java.io.File("src/test/resources/linked.js")
+      ).getLines.mkString("").getBytes
+      val sig = "Trd0QZEjE60a%2FcQUI2a5575JY2I%3D"
+      sign(secret, path, content) must_== sig
     }
   }
 }
