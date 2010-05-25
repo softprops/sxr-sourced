@@ -24,7 +24,7 @@ trait Auth {
     val mac = crypto.Mac.getInstance(SHA1)
     mac.init(key)
     mac.update(path)
-    new String(encodeBase64(mac.doFinal(content)))
+    java.net.URLEncoder.encode(new String(encodeBase64(mac.doFinal(content))))
   }
   
   def generateKey = {
