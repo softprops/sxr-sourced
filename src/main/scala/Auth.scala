@@ -11,9 +11,7 @@ trait Auth {
   
   def authorize(sig: String, orgId: String, path: String, content: Array[Byte]) =
     OrgStore(orgId) match { 
-      case Some(token) => {
-        sig == sign(token.secret, path, content)
-      }
+      case Some(token) => sig == sign(token.secret, path, content)
       case _ => false
     }
   
