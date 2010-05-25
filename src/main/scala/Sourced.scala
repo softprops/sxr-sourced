@@ -58,12 +58,6 @@ class Sourced extends Responses with Urls with Requests with Auth with IO with u
             }
           }
         }
-  
-      case GET(r) => r match {
-        case req: Req if req.getRequestURI.startsWith("/_ah/") =>
-          Pass
-      }
-      
   }
 }
 
