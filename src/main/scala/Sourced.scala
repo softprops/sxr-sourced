@@ -19,9 +19,7 @@ class Sourced extends Responses with Urls with Requests with Auth with IO with u
             case arr: Array[Byte] if arr.isEmpty => Status(400) ~> ResponseString("request body required")
             case body => {
               val uri = url(req)
-              authorize(
-                java.net.URLDecoder.decode(sig), org, uri, body
-              ) match {
+              authorize(sig, org, uri, body) match {
                 case true => {
                   val src = <<<(body).mkString
                   DocStore + (uri -> src)
