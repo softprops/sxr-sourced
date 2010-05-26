@@ -4,7 +4,7 @@ import unfiltered.request._
 import unfiltered.response._
 
 /** Sourced - serving scala for the _good_ of mankind **/
-class Sourced extends Responses with Urls with Requests with Auth with IO with unfiltered.Plan {
+class Sourced extends Responses with Urls with Requests with Auth with unfiltered.Plan {
   import scala.io.Source.{ fromBytes => <<< }
   import stores.{DocStore, OrgStore}
   import javax.servlet.http.{HttpServletRequest => Req}
@@ -14,21 +14,18 @@ class Sourced extends Responses with Urls with Requests with Auth with IO with u
     case PUT(Path(Seg(org :: project :: version :: srcName :: _), req)) => 
       req.getParameter("sig") match {
         case null => Status(400) ~> ResponseString("sig required")
-        case sig => {
-          bytes(req.getInputStream) match {
-            case arr: Array[Byte] if arr.isEmpty => Status(400) ~> ResponseString("request body required")
-            case body => {
-              val uri = url(req)
-              authorize(sig, org, uri, body) match {
-                case true => {
-                  val src = <<<(body).mkString
-                  DocStore + (uri -> src)
-                  Status(201) ~> ContentType(contentType(uri)) ~> ResponseString(src)
-                }
-                case _ => Status(401)
+        case sig => req match {
+          case Bytes(body, req) =>
+            val uri = url(req)
+            authorize(sig, org, uri, body) match {
+              case true => {
+                val src = <<<(body).mkString
+                DocStore + (uri -> src)
+                Status(201) ~> ContentType(contentType(uri)) ~> ResponseString(src)
               }
+              case _ => Status(401)
             }
-          }
+          case _ => Status(400) ~> ResponseString("request body required")
         }
       }
   
