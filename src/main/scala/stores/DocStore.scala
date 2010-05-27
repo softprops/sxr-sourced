@@ -1,6 +1,6 @@
 package implicitly.stores
 
-import models.Doc
+import implicitly.models.Doc
 import com.google.appengine.api.datastore.{Text => BigString}
 
 object DocStore extends jdo.JdoStore[Doc] {

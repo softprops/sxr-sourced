@@ -1,6 +1,6 @@
 package implicitly.stores
 
-import models.Token
+import implicitly.models.Token
 
 object OrgStore extends jdo.JdoStore[Token] {
   override val domainCls = classOf[Token]

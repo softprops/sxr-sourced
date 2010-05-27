@@ -1,5 +1,7 @@
 package implicitly.stores.jdo
 
+import implicitly.stores.Store
+
 import javax.jdo.{JDOHelper, PersistenceManagerFactory, PersistenceManager}
 
 import com.google.appengine.api.datastore.{Key, KeyFactory}
