@@ -31,7 +31,7 @@ class Sourced extends Responses with Urls with Requests with Auth with unfiltere
   
       case GET(Path(Seg(org :: project :: version :: srcName :: _), req)) =>
         DocStore(url(req)) match {
-          case Some(src) => Status(200) ~> ResponseString(src.doc.getValue) ~> ContentType(contentType(src.url))
+          case Some(src) => Status(200) ~> ContentType(contentType(src.url)) ~> ResponseString(src.doc.getValue)
           case _ => NotFound
         }
     
