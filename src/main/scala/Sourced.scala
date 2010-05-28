@@ -15,7 +15,7 @@ class Sourced extends Responses with Urls with Requests with Auth with unfiltere
       req.getParameter("sig") match {
         case null => Status(400) ~> ResponseString("sig required")
         case sig => req match {
-          case Bytes(body) =>
+          case Bytes(body, _) =>
             val uri = url(req)
             authorize(sig, org, uri, body) match {
               case true => {
