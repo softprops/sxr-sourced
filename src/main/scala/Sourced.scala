@@ -11,10 +11,10 @@ class Sourced extends Responses with Urls with Requests with Auth with unfiltere
   
   def filter = {
     
-    case PUT(Path(Seg(org :: project :: version :: srcName :: _), req)) => 
-      req.getParameter("sig") match {
-        case null => Status(400) ~> ResponseString("sig required")
-        case sig => req match {
+    case PUT(Path(Seg(org :: project :: version :: srcName :: _), Params(params, req))) => 
+      params.first("sig") match {
+        case None => Status(400) ~> ResponseString("sig required")
+        case Some(sig) => req match {
           case Bytes(body, _) =>
             val uri = url(req)
             authorize(sig, org, uri, body) match {
@@ -42,10 +42,10 @@ class Sourced extends Responses with Urls with Requests with Auth with unfiltere
           </form>
         }
   
-      case POST(Path(Seg("setkey" :: Nil), req)) =>
-        req.getParameter("orgId") match {
-          case null => Status(400) ~> ResponseString("orgId required")
-          case orgId => {
+      case POST(Path(Seg("setkey" :: Nil), Params(params,req))) =>
+        params.first("orgId") match {
+          case None => Status(400) ~> ResponseString("orgId required")
+          case Some(orgId) => {
             val key = generateKey
             OrgStore + (orgId, key)
             adminPage(req) {
