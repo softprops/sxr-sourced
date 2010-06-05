@@ -2,10 +2,10 @@ package implicitly.models
  
 import javax.jdo.annotations._
 
-@PersistenceCapable{ val identityType = IdentityType.APPLICATION, val detachable="true"}
+@PersistenceCapable( identityType = IdentityType.APPLICATION, detachable="true")
 class Token() {
   @PrimaryKey
-  @Persistent{ val valueStrategy = IdGeneratorStrategy.IDENTITY}
+  @Persistent( valueStrategy = IdGeneratorStrategy.IDENTITY)
   var org: String = _
 
   @Persistent
