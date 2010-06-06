@@ -41,6 +41,15 @@ class Sourced extends Responses with Urls with Requests with Auth with unfiltere
             <input type="submit" value="Generate Token" />
           </form>
         }
+      
+      case GET(Path("/sxr.links", _)) =>
+        ContentType("text/plain") ~> ResponseString(
+          DocStore.withUrls { urls =>
+            (Set[String]() /: urls){ (set, url) =>
+              set + url.substring(0, url.lastIndexOf('/') + 1)
+            }.mkString("\n")
+          }
+        )
   
       case POST(Path(Seg("setkey" :: Nil), Params(params,req))) =>
         params("orgId") match {

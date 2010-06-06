@@ -13,4 +13,8 @@ object DocStore extends jdo.JdoStore[Doc] {
     d.doc = new BigString(kv._2)
     save(d)
   }
+  def withUrls[T](f: Iterable[String] => T) = withManager { m =>
+    import scala.collection.JavaConversions._
+    f(m.newQuery("select url from " + domainCls.getName).execute().asInstanceOf[java.util.List[String]])
+  }
 }
