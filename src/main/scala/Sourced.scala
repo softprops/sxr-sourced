@@ -43,12 +43,12 @@ class Sourced extends Responses with Urls with Requests with Auth with unfiltere
         }
       
       case GET(Path("/sxr.links", _)) =>
+        val LinkIndex = "^(.+)link.index$".r
         ContentType("text/plain") ~> ResponseString(
-          DocStore.withUrls { urls =>
-            (Set[String]() /: urls){ (set, url) =>
-              set + url.substring(0, url.lastIndexOf('/') + 1)
-            }.mkString("\n")
-          }
+          DocStore.withUrls { _.flatMap {
+            case LinkIndex(base) => Some(base)
+            case _ => None
+          } mkString "\n" }
         )
   
       case POST(Path(Seg("setkey" :: Nil), Params(params,req))) =>
