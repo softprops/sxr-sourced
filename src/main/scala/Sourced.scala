@@ -5,22 +5,21 @@ import unfiltered.response._
 
 /** Sourced - serving scala for the _good_ of mankind **/
 class Sourced extends Responses with Urls with Requests with Auth with unfiltered.Plan {
-  import scala.io.Source.{ fromBytes => <<< }
   import stores.{DocStore, OrgStore}
   import javax.servlet.http.{HttpServletRequest => Req}
   
   def filter = {
     
-    case PUT(Path(Seg(org :: project :: version :: srcName :: _), Params(params, req))) => 
+    case PUT(Path(Seg(org :: project :: version :: srcName :: _), Params(params, RequestContentType(contentTypes, req)))) => 
       params("sig") match {
         case Seq(sig) => req match {
           case Bytes(body, _) =>
             val uri = url(req)
+            val docContentType = contentTypes.headOption.getOrElse(contentType(uri))
             authorize(sig, org, uri, body) match {
               case true => {
-                val src = <<<(body).mkString
-                DocStore + (uri -> src)
-                Status(201) ~> ContentType(contentType(uri)) ~> ResponseString(src)
+                DocStore + (uri, docContentType, body)
+                Status(201) ~> ContentType(docContentType) ~> ResponseBytes(body)
               }
               case _ => Status(401)
             }
@@ -31,7 +30,10 @@ class Sourced extends Responses with Urls with Requests with Auth with unfiltere
   
       case GET(Path(Seg(org :: project :: version :: srcName :: _), req)) =>
         DocStore(url(req)) match {
-          case Some(src) => Status(200) ~> ContentType(contentType(src.url)) ~> ResponseString(src.doc.getValue)
+          case Some(src) => 
+            val ct = Option(src.contentType).getOrElse(contentType(src.url))
+            Status(200) ~> ContentType(ct) ~> ResponseBytes(src.doc.getBytes)
+            
           case _ => NotFound
         }
     
@@ -43,9 +45,9 @@ class Sourced extends Responses with Urls with Requests with Auth with unfiltere
         }
       
       case GET(Path("/sxr.links", _)) =>
-        val LinkIndex = "^(.+)link.index$".r
+        val LinkIndex = "^(.+)link\\.index\\.gz$".r
         ContentType("text/plain") ~> ResponseString(
-          DocStore.withUrls { _.flatMap {
+          DocStore.withUrls("application/x-gzip") { _.flatMap {
             case LinkIndex(base) => Some(base)
             case _ => None
           } mkString "\n" }
