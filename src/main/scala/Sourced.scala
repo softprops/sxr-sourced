@@ -31,8 +31,7 @@ class Sourced extends Responses with Urls with Requests with Auth with unfiltere
       case GET(Path(Seg(org :: project :: version :: srcName :: _), req)) =>
         DocStore(url(req)) match {
           case Some(src) => 
-            val ct = Option(src.contentType).getOrElse(contentType(src.url))
-            Status(200) ~> ContentType(ct) ~> ResponseBytes(src.doc.getBytes)
+            Status(200) ~> ContentType(src.contentType) ~> ResponseBytes(src.doc.getBytes)
             
           case _ => NotFound
         }
