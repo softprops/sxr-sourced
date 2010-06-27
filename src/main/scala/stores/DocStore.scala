@@ -14,13 +14,12 @@ object DocStore extends jdo.JdoStore[Doc] {
     d.doc = new Blob(content)
     save(d)
   }
-  def withUrls[T](contentType: String)(f: Iterable[String] => T) = withManager { m =>
-    import scala.collection.JavaConversions._
-    f({
-      val q = m.newQuery("select url from " + domainCls.getName)
-      q.setFilter("contentType == contentTypeP")
-      q.declareParameters("String contentTypeP")
-      q.execute(contentType).asInstanceOf[java.util.List[String]]
-    })
-  }
+
+  def withUrls[T](contentType: String)(f: Iterable[String] => T) = 
+      f(query("select url from " + domainCls.getName) { q =>
+      import scala.collection.JavaConversions._
+        q.setFilter("contentType == contentTypeP")
+        q.declareParameters("String contentTypeP")
+        q.execute(contentType).asInstanceOf[java.util.List[String]]
+      })
 }

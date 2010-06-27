@@ -2,7 +2,7 @@ package implicitly.stores.jdo
 
 import implicitly.stores.Store
 
-import javax.jdo.{JDOHelper, PersistenceManagerFactory, PersistenceManager}
+import javax.jdo.{JDOHelper, PersistenceManagerFactory, PersistenceManager, Query}
 
 import com.google.appengine.api.datastore.{Key, KeyFactory}
 
@@ -37,5 +37,9 @@ trait JdoStore[V] extends Store[V] with DefaultManager {
       case Some(v) => m.deletePersistent(v)
       case _ => ()
     } 
+  }
+  
+  protected def query[T](q: String)(f: Query => T) = withManager { m =>
+    f(m.newQuery(q)) 
   }
 }
