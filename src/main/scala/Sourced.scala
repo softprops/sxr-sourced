@@ -3,6 +3,27 @@ package implicitly
 import unfiltered.request._
 import unfiltered.response._
 
+/** Public Sourced `api` */
+class Api extends Responses with Urls with Requests with Auth with unfiltered.Plan {
+  import stores.{DocStore, OrgStore}
+  import javax.servlet.http.{HttpServletRequest => Req}
+  
+  def filter = {
+    case GET(Path(Seg("api" :: "recent" :: Nil), Params(params, _))) =>
+      val Index = "^(.+)index\\.html$".r
+      val js = DocStore.recent("text/html") { _.flatMap {
+        case Index(base) => Some(base + "index.html")
+        case _ => None
+      } mkString("[\"", "\",\"", "\"]") }
+      ContentType("application/json") ~> ResponseString(
+         params("callback") match {
+            case Seq(cb) => "%s(%s)" format(cb, js)
+            case _ => js
+          }
+      )
+  }
+}
+
 /** Sourced - serving scala for the _good_ of mankind **/
 class Sourced extends Responses with Urls with Requests with Auth with unfiltered.Plan {
   import stores.{DocStore, OrgStore}
@@ -68,6 +89,9 @@ class Sourced extends Responses with Urls with Requests with Auth with unfiltere
 
 object SourcedServer {
   def main(args: Array[String]) {
-    unfiltered.server.Http(8080).filter(new Sourced).run
+    unfiltered.server.Http(8080)
+      .filterAt("/api/*")(new Api)
+      .filter(new Sourced)
+      .run
   }
 }
