@@ -11,6 +11,7 @@
         <property name="javax.jdo.option.NontransactionalWrite" value="true"/>
         <property name="javax.jdo.option.RetainValues" value="true"/>
         <property name="datanucleus.appengine.autoCreateDatastoreTxns" value="true"/>
+        <property name="javax.jdo.option.DatastoreReadTimeoutMillis" value="15000" />
     </persistence-manager-factory>
 
     <persistence-manager-factory name="eventual-reads-short-deadlines">

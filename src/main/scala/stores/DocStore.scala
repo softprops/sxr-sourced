@@ -2,8 +2,9 @@ package implicitly.stores
 
 import implicitly.models.Doc
 import com.google.appengine.api.datastore.Blob
+import javax.jdo.annotations._
 
-object DocStore extends jdo.JdoStore[Doc] {
+object DocStore extends jdo.JdoStore[Doc] with jdo.DefaultManager {
   override val domainCls = classOf[Doc]
   type KeyClass = String
   def apply(key: String) = get(key)
@@ -15,11 +16,26 @@ object DocStore extends jdo.JdoStore[Doc] {
     save(d)
   }
 
+  @Transactional
   def withUrls[T](contentType: String)(f: Iterable[String] => T) = 
       f(query("select url from " + domainCls.getName) { q =>
       import scala.collection.JavaConversions._
         q.setFilter("contentType == contentTypeP")
         q.declareParameters("String contentTypeP")
-        q.execute(contentType).asInstanceOf[java.util.List[String]]
+        val l = q.execute(contentType).asInstanceOf[java.util.List[String]]
+        l.size // important: read l to ensure objects are loaded before pm closes
+        l
+      })
+
+  @Transactional
+  def recent[T](contentType: String)(f: Iterable[String] => T) = 
+      f(query("select url from " + domainCls.getName) { q =>
+      import scala.collection.JavaConversions._
+        q.setFilter("contentType == contentTypeP")
+        q.declareParameters("String contentTypeP")
+        q.setOrdering("createdAt desc")
+        val l = q.execute(contentType).asInstanceOf[java.util.List[String]]
+        l.size // important: read l to ensure objects are loaded before pm closes
+        l
       })
 }

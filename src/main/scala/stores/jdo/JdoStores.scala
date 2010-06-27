@@ -7,7 +7,7 @@ import javax.jdo.{JDOHelper, PersistenceManagerFactory, PersistenceManager, Quer
 import com.google.appengine.api.datastore.{Key, KeyFactory}
 
 /** KeyClass key to V value */
-trait JdoStore[V] extends Store[V] with DefaultManager {
+trait JdoStore[V] extends Store[V]  { self: Managed =>
   
   val domainCls: Class[V]
   

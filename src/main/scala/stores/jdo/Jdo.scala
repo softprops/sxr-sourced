@@ -6,15 +6,6 @@ import com.google.appengine.api.datastore.{Key, KeyFactory}
 
 trait Managed {
   def manager: PersistenceManager
-}
-
-object ManagerFactory {
-  lazy val get = JDOHelper.getPersistenceManagerFactory("transactions-optional")
-}
-
-trait DefaultManager extends Managed {
-  private lazy val fact = ManagerFactory get
-  def manager = fact getPersistenceManager
   def withManager[T](fn: PersistenceManager => T): T = {
     val pm = manager
     try {
@@ -23,4 +14,22 @@ trait DefaultManager extends Managed {
       pm.close
     }
   }
+}
+
+object ManagerFactory {
+  lazy val get = JDOHelper.getPersistenceManagerFactory("transactions-optional")
+}
+
+object EventualConsistencyManagerFactory {
+  lazy val get = JDOHelper.getPersistenceManagerFactory("eventual-reads-short-deadlines")
+}
+
+trait DefaultManager extends Managed {
+  private lazy val fact = ManagerFactory get
+  def manager = fact getPersistenceManager
+}
+
+trait EventualConsistencyManager extends Managed {
+  private lazy val fact = EventualConsistencyManagerFactory get
+  def manager = fact getPersistenceManager
 }
