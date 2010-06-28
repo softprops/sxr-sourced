@@ -4,8 +4,6 @@ Serving Scala for the _good_ of mankind
 
 A Simple server for Sxr Docs
 
-(UNDER DEVELOPMENT)
-
 ### Install
 
 This project is using the sbt appengine plugin which appears to be unpublished, until it does, do the following
