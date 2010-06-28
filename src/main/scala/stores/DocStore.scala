@@ -28,13 +28,13 @@ object DocStore extends jdo.JdoStore[Doc] with jdo.DefaultManager {
       })
 
   @Transactional
-  def recent[T](contentType: String)(f: Iterable[String] => T) = 
-      f(query("select url from " + domainCls.getName) { q =>
+  def recent[T](contentType: String)(f: Iterable[Array[java.lang.Object]] => T) = 
+      f(query("select url, createdAt from " + domainCls.getName) { q =>
       import scala.collection.JavaConversions._
         q.setFilter("contentType == contentTypeP")
         q.declareParameters("String contentTypeP")
         q.setOrdering("createdAt desc")
-        val l = q.execute(contentType).asInstanceOf[java.util.List[String]]
+        val l = q.execute(contentType).asInstanceOf[java.util.List[Array[java.lang.Object]]]
         l.size // important: read l to ensure objects are loaded before pm closes
         l
       })

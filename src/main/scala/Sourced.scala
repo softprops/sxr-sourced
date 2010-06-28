@@ -4,17 +4,22 @@ import unfiltered.request._
 import unfiltered.response._
 
 /** Public Sourced `api` */
-class Api extends Responses with Urls with Requests with Auth with unfiltered.Plan {
-  import stores.{DocStore, OrgStore}
+class Api extends Urls with Requests with unfiltered.Plan {
+  import stores.DocStore
   import javax.servlet.http.{HttpServletRequest => Req}
-  
+
+  case class  Src(org: String, proj: String, vers: String, url: String, createdAt: java.util.Date) {
+    def asJson = """{"org":"%s","project":"%s","version":"%s", "url":"%s", "createdAt":%s}""" format(
+      org, proj, vers, url, "Date(%s)" format(createdAt.getTime))
+  }
+    
   def filter = {
-    case GET(Path(Seg("api" :: "recent" :: Nil), Params(params, _))) =>
-      val Index = "^(.+)index\\.html$".r
+    case GET(Path(Seg("api" :: "recent" :: Nil), Params(params, req))) =>
+      val Index = ("^"+hostUrl(req).replace(".", "[.]")+"/(.+)/(.+)/(.+)/index\\.html$").r
       val js = DocStore.recent("text/html") { _.flatMap {
-        case Index(base) => Some(base + "index.html")
+        case Array(Index(org, proj, vers), created: java.util.Date) => Some(Src(org, proj, vers, (hostUrl(req) :: org :: proj :: vers :: "index.html" :: Nil) mkString("/"), created) asJson)
         case _ => None
-      } mkString("[\"", "\",\"", "\"]") }
+      } mkString("[", ",", "]") }
       ContentType("application/json") ~> ResponseString(
          params("callback") match {
             case Seq(cb) => "%s(%s)" format(cb, js)
