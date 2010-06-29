@@ -19,7 +19,8 @@ class Api extends Urls with Requests with unfiltered.Plan {
       val js = DocStore.recent("text/html") { _.flatMap {
         case Array(Index(org, proj, vers), created: java.util.Date) => Some(Src(org, proj, vers, (hostUrl(req) :: org :: proj :: vers :: "index.html" :: Nil) mkString("/"), created) asJson)
         case _ => None
-      } mkString("[", ",", "]") }
+      } take(10) mkString("[", ",", "]") }
+      
       ContentType("application/json") ~> ResponseString(
          params("callback") match {
             case Seq(cb) => "%s(%s)" format(cb, js)
