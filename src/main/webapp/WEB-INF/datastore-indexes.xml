@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<datastore-indexes
+  autoGenerate="true">
+  <datastore-index kind="Doc" ancestor="false">
+    <property name="contentType" direction="asc" />
+  </datastore-index>
+  <datastore-index kind="Doc" ancestor="false">
+    <property name="contentType" direction="asc" />
+    <property name="createdAt" direction="desc" />
+  </datastore-index>
+</datastore-indexes>
