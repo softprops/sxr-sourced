@@ -42,10 +42,19 @@
         </div>
         <h1>implicit.ly sourced</h1>
       </header>
+      
       <div class="container" id="about-container">
         <h2>Sourced?</h2>
-        Implicitly sourced is a free host for <a href="http://github.com/harrah/browse#readme">sxr</a> processed scala source files. The sxr document publishing protocol is currently implemented by the <a href="http://code.google.com/p/simple-build-tool/">sbt</a> plugin <a href="http://github.com/n8han/sxr-publish#readme">sxr-publish</a>. Publishing documents requires a secret key associated with your project's orgId (com.project.org). To obtain a private key for your project, please contact <a href="http://twitter.com/n8han">@n8han</a> or <a href="http://twitter.com/softprops">@softprops</a>.
+        <p>Implicitly sourced is a <strong>free</strong> host for <strong><a href="http://github.com/harrah/browse#readme">sxr</a></strong> processed <strong>scala</strong> source files.</p>
+        <p>The sxr document publishing protocol is currently implemented by the <a href="http://code.google.com/p/simple-build-tool/">sbt</a> plugin <strong><a href="http://github.com/n8han/sxr-publish#readme">sxr-publish</a></strong>.</p>
+        <p> Publishing documents requires a <strong>private key</strong> associated with your project's orgId (com.project.org). To obtain a private key for your project, please contact <a href="http://twitter.com/n8han">@n8han</a> or <a href="http://twitter.com/softprops">@softprops</a>.</p>
       </div>
+      
+      <div class="container" id="source-container" >
+        <h2>Recently Sourced</h2>
+        <ul id="source-list"></ul>
+      </div>
+      
       <div class="container" id="instruct-container">
         <h2>Be Sourced</h2>
         <pre class="src">
@@ -71,10 +80,7 @@ orgid=orgs3cr3t
 > publish-sxr
 </pre>
       </div>      
-      <div class="container" id="source-container" >
-        <h2>Recently Sourced</h2>
-        <ul id="source-list"></ul>
-      </div>
+
       <footer class="rounded">
         For questions, please contact <a href="http://twitter.com/n8han">@n8han</a> or <a href="http://twitter.com/softprops">@softprops</a>
       </footer>
