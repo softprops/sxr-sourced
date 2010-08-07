@@ -21,7 +21,7 @@ class Api extends Urls with Requests with unfiltered.Plan {
         case _ => None
       } take(10) mkString("[", ",", "]") }
       
-      ContentType("application/json") ~> ResponseString(
+      JsonContent ~> ResponseString(
          params("callback") match {
             case Seq(cb) => "%s(%s)" format(cb, js)
             case _ => js
@@ -46,19 +46,19 @@ class Sourced extends Responses with Urls with Requests with Auth with unfiltere
             authorize(sig, org, uri, body) match {
               case true => {
                 DocStore + (uri, docContentType, body)
-                Status(201) ~> ContentType(docContentType) ~> ResponseBytes(body)
+                Created ~> ContentType(docContentType) ~> ResponseBytes(body)
               }
-              case _ => Status(401)
+              case _ => Unauthorized
             }
-          case _ => Status(400) ~> ResponseString("request body required")
+          case _ => BadRequest ~> ResponseString("request body required")
         }
-        case _ => Status(400) ~> ResponseString("sig required")
+        case _ => BadRequest ~> ResponseString("sig required")
       }
   
       case GET(Path(Seg(org :: project :: version :: srcName :: _), req)) =>
         DocStore(url(req)) match {
           case Some(src) => 
-            Status(200) ~> ContentType(src.contentType) ~> ResponseBytes(src.doc.getBytes)
+            Ok ~> ContentType(src.contentType) ~> ResponseBytes(src.doc.getBytes)
             
           case _ => NotFound
         }
@@ -72,7 +72,7 @@ class Sourced extends Responses with Urls with Requests with Auth with unfiltere
       
       case GET(Path("/sxr.links", _)) =>
         val LinkIndex = "^(.+)link\\.index\\.gz$".r
-        ContentType("text/plain") ~> ResponseString(
+        PlainTextContent ~> ResponseString(
           DocStore.withUrls("application/x-gzip") { _.flatMap {
             case LinkIndex(base) => Some(base)
             case _ => None
@@ -88,7 +88,7 @@ class Sourced extends Responses with Urls with Requests with Auth with unfiltere
               <div> { key } </div>
             }
           }
-          case _ => Status(400) ~> ResponseString("orgId required")
+          case _ => BadRequest ~> ResponseString("orgId required")
         }
   }
 }
