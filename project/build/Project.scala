@@ -9,12 +9,9 @@ class Project(info: ProjectInfo) extends AppengineProject(info) with DataNucleus
   val smackRepo = "m2-repository-smack" at "http://maven.reucon.com/public"
   val appengineRepo = "nexus" at "http://maven-gae-plugin.googlecode.com/svn/repository/"
   
-  // web
-  val jetty7 = "org.eclipse.jetty" % "jetty-webapp" % "7.0.2.RC0" % "test"
-  
   // unfiltered
-  val ufs = "net.databinder" %% "unfiltered-server" % "0.1.3"
-  
+  val uf = "net.databinder" %% "unfiltered" % "0.1.4-SNAPSHOT"
+
   // security
   val codec = "commons-codec" % "commons-codec" % "1.4"
    
