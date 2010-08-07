@@ -92,12 +92,3 @@ class Sourced extends Responses with Urls with Requests with Auth with unfiltere
         }
   }
 }
-
-object SourcedServer {
-  def main(args: Array[String]) {
-    unfiltered.server.Http(8080)
-      .filterAt("/api/*")(new Api)
-      .filter(new Sourced)
-      .run
-  }
-}
