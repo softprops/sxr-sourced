@@ -5,6 +5,12 @@ trait Responses { this: Urls =>
   import javax.servlet.http.{HttpServletRequest => Req}
   import unfiltered.response._
   
+  import com.google.appengine.api.blobstore._
+  
+  case class BlobResponder(bk: String, blobs: BlobstoreService) extends Responder {
+    def respond(res: javax.servlet.http.HttpServletResponse) = blobs.serve(new BlobKey(bk), res)
+  }
+  
   def adminPage(req: Req)(out: => scala.xml.Node) = {
     val svc = com.google.appengine.api.users.UserServiceFactory.getUserService
     if (svc.isUserLoggedIn && svc.isUserAdmin)

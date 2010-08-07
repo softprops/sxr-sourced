@@ -8,6 +8,8 @@ object DocStore extends jdo.JdoStore[Doc] with jdo.DefaultManager {
   override val domainCls = classOf[Doc]
   type KeyClass = String
   def apply(key: String) = get(key)
+  
+  @Deprecated
   def + (url: String, contentType: String, content: Array[Byte]) = {
     val d = new Doc
     d.url = url
@@ -15,6 +17,16 @@ object DocStore extends jdo.JdoStore[Doc] with jdo.DefaultManager {
     d.doc = new Blob(content)
     save(d)
   }
+
+  def + (url: String, contentType: String, blobKey: String) = {
+    val d = new Doc
+    d.url = url
+    d.contentType = contentType
+    d.blobKey = blobKey
+    save(d)
+  }
+
+
 
   @Transactional
   def withUrls[T](contentType: String)(f: Iterable[String] => T) = 

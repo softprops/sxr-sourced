@@ -31,35 +31,55 @@ class Api extends Urls with Requests with unfiltered.Plan {
 }
 
 /** Sourced - serving scala for the _good_ of mankind **/
-class Sourced extends Responses with Urls with Requests with Auth with unfiltered.Plan {
+class Sourced extends Responses with Urls with Requests with Auth with IO with unfiltered.Plan {
   import stores.{DocStore, OrgStore}
   import javax.servlet.http.{HttpServletRequest => Req}
+  import com.google.appengine.api.blobstore._
+  
+  val blobs = BlobstoreServiceFactory.getBlobstoreService
   
   def filter = {
     
-    case PUT(Path(Seg(org :: project :: version :: srcName :: _), Params(params, RequestContentType(contentTypes, req)))) => 
-      params("sig") match {
-        case Seq(sig) => req match {
-          case Bytes(body, _) =>
-            val uri = url(req)
-            val docContentType = contentTypes.headOption.getOrElse(contentType(uri))
-            authorize(sig, org, uri, body) match {
-              case true => {
-                DocStore + (uri, docContentType, body)
-                Created ~> ContentType(docContentType) ~> ResponseBytes(body)
-              }
-              case _ => Unauthorized
-            }
-          case _ => BadRequest ~> ResponseString("request body required")
+    case POST(Path(Seg(org :: project :: version :: srcName :: _), Params(params, RequestContentType(contentTypes, req)))) => 
+      val path = url(req)
+      val docContentType = contentTypes.headOption.getOrElse(contentType(path))
+      Ok ~> ResponseString(blobs.createUploadUrl("/uploads?path=%s&contentType=%s" format(path, docContentType)))
+    
+    case POST(Path("/uploads", Params(params,  RequestContentType(contentTypes, req)))) => 
+      Params.Query[String](params) { q =>
+        for {
+          sig <- q("sig") required("sig")
+          orgId <- q("orgId") required("orgId")
+          path <- q("path") required("path")
+        } yield {
+          blobs.getUploadedBlobs(req).get("src") match {
+            case null => BadRequest ~> ResponseString("src file is required")
+            case blobKey =>
+              bytesFrom(new BlobstoreInputStream(blobKey)){ bytes =>
+                authorize(sig.get, orgId.get, path.get, bytes) match {
+                  case true => {
+                    val docContentType = contentTypes.headOption.getOrElse(contentType(path.get))
+                    DocStore + (path.get, docContentType, blobKey.getKeyString)
+                    Created ~> ContentType(docContentType)
+                  }
+                  case _ =>
+                    blobs.delete(blobKey)
+                    Unauthorized
+                }
+              }  
+          }
         }
-        case _ => BadRequest ~> ResponseString("sig required")
+      } orElse { errors =>
+        BadRequest ~> ResponseString(errors map("%s is required" format(_)) mkString ". ")
       }
   
       case GET(Path(Seg(org :: project :: version :: srcName :: _), req)) =>
         DocStore(url(req)) match {
-          case Some(src) => 
-            Ok ~> ContentType(src.contentType) ~> ResponseBytes(src.doc.getBytes)
-            
+          case Some(src) =>
+            Ok ~> ContentType(src.contentType) ~> (src.doc match{
+              case null => BlobResponder(src.blobKey, blobs)
+              case _ => ResponseBytes(src.doc.getBytes)
+            })
           case _ => NotFound
         }
     
