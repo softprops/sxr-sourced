@@ -12,9 +12,13 @@ class Doc() {
   @Persistent
   var contentType: String = _
 
+  @Deprecated
   @Persistent
   var doc: Blob = _
   
   @Persistent
   var createdAt: java.util.Date = new java.util.Date()
+  
+  @Persistent
+  var blobKey: String = _
 }
