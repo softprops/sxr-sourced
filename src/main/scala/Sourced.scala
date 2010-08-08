@@ -69,7 +69,7 @@ class Sourced extends Responses with Urls with Requests with Auth with IO with u
                   }
                   case _ =>
                     blobs.delete(blobKey)
-                    response(401, "signature is not valid")
+                    response(401, "%s is not a valid sig" format sig.get)
                 }
               }  
           }
