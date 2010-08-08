@@ -34,22 +34,24 @@ class Api extends Urls with Requests with unfiltered.Plan {
 class Sourced extends Responses with Urls with Requests with Auth with IO with unfiltered.Plan {
   import stores.{DocStore, OrgStore}
   import javax.servlet.http.{HttpServletRequest => Req}
+  import java.net.URLEncoder.encode
   import com.google.appengine.api.blobstore._
   
   val blobs = BlobstoreServiceFactory.getBlobstoreService
+  def urlencode(str: String) = encode(str, "utf8")
   
   def filter = {
     
-    case POST(Path(Seg(org :: project :: version :: srcName :: _), Params(params, RequestContentType(contentTypes, req)))) => 
-      val path = url(req)
-      val docContentType = contentTypes.headOption.getOrElse(contentType(path))
-      Ok ~> ResponseString(blobs.createUploadUrl("/uploads?path=%s&contentType=%s" format(path, docContentType)))
+    case POST(Path(Seg(org :: project :: version :: srcName :: _), req)) => 
+      Ok ~> ResponseString(blobs.createUploadUrl(
+        "/uploads" //?org=%s&path=%s" format (urlencode(org), urlencode(url(req)))
+      ))
     
-    case POST(Path("/uploads", Params(params,  RequestContentType(contentTypes, req)))) => 
+    case Path("/uploads", Params(params,  req)) => 
       Params.Query[Unit](params) { q =>
         for {
           sig <- q("sig") required(())
-          orgId <- q("orgId") required(())
+          orgId <- q("org") required(())
           path <- q("path") required(())
         } yield {
           blobs.getUploadedBlobs(req).get("src") match {
@@ -58,9 +60,9 @@ class Sourced extends Responses with Urls with Requests with Auth with IO with u
               bytesFrom(new BlobstoreInputStream(blobKey)){ bytes =>
                 authorize(sig.get, orgId.get, path.get, bytes) match {
                   case true => {
-                    val docContentType = contentTypes.headOption.getOrElse(contentType(path.get))
+                    val docContentType = contentType(path.get) // todo: use blob info's content type here
                     DocStore + (path.get, docContentType, blobKey.getKeyString)
-                    Created ~> ContentType(docContentType)
+                    Created
                   }
                   case _ =>
                     blobs.delete(blobKey)
