@@ -44,36 +44,47 @@ class Sourced extends Responses with Urls with Requests with Auth with IO with u
     
     case POST(Path(Seg(org :: project :: version :: srcName :: _), req)) => 
       Ok ~> ResponseString(blobs.createUploadUrl(
-        "/uploads" //?org=%s&path=%s" format (urlencode(org), urlencode(url(req)))
+        "/upload?org=%s&path=%s" format (urlencode(org), urlencode(url(req)))
       ))
     
-    case Path("/uploads", Params(params,  req)) => 
+    case Path("/upload", Params(params,  req)) =>
+      /** send a redirect back to a handler that will respond, as appengine requires */
+      def response(status: Int, msg: String) = 
+        Redirect("/uploaded?status=%d&msg=%s" format (status, urlencode(msg)))
       Params.Query[Unit](params) { q =>
         for {
           sig <- q("sig") required(())
           orgId <- q("org") required(())
           path <- q("path") required(())
         } yield {
-          blobs.getUploadedBlobs(req).get("src") match {
-            case null => BadRequest ~> ResponseString("src file is required")
+          blobs.getUploadedBlobs(req).get("file") match {
+            case null => response(400, "file is required")
             case blobKey =>
               bytesFrom(new BlobstoreInputStream(blobKey)){ bytes =>
                 authorize(sig.get, orgId.get, path.get, bytes) match {
                   case true => {
                     val docContentType = contentType(path.get) // todo: use blob info's content type here
                     DocStore + (path.get, docContentType, blobKey.getKeyString)
-                    Created
+                    response(201, "success")
                   }
                   case _ =>
                     blobs.delete(blobKey)
-                    Unauthorized
+                    response(401, "signature is not valid")
                 }
               }  
           }
         }
       } orElse { fails =>
-        BadRequest ~> ResponseString(fails map { fl => "%s is required".format(fl.name) } mkString ". ")
+        response(400, fails map { fl => "%s is required".format(fl.name) } mkString ". ")
       }
+
+      case GET(Path("/uploaded", Params(p, _))) =>
+        Params.Query[Unit](p) { q =>
+          for {
+            status <- q("status") is Params.int required(())
+            msg <- q("msg") required(())
+          } yield Status(status.get) ~> ResponseString(msg.get)
+        } orElse { _ => InternalServerError }
   
       case GET(Path(Seg(org :: project :: version :: srcName :: _), req)) =>
         DocStore(url(req)) match {
