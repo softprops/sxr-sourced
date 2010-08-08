@@ -87,14 +87,11 @@ class Sourced extends Responses with Urls with Requests with Auth with IO with u
         } orElse { _ => InternalServerError }
   
       case GET(Path(Seg(org :: project :: version :: srcName :: _), req)) =>
-        DocStore(url(req)) match {
-          case Some(src) =>
-            Ok ~> ContentType(src.contentType) ~> (src.doc match{
-              case null => BlobResponder(src.blobKey, blobs)
-              case _ => ResponseBytes(src.doc.getBytes)
-            })
-          case _ => NotFound
-        }
+        DocStore(url(req)) map { src =>
+          Option(src.doc) map { doc =>
+            Ok ~> ContentType(src.contentType) ~> ResponseBytes(doc.getBytes)
+          } getOrElse BlobResponder(src.blobKey, blobs)
+        } getOrElse NotFound
     
       case GET(Path(Seg("admin" ::  Nil), req)) => adminPage(req) {
           <form action="setkey" method="post">
