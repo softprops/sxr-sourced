@@ -30,7 +30,7 @@ class Api extends Urls with Requests with unfiltered.Plan {
   }
 }
 
-/** Sourced - serving scala for the _good_ of mankind **/
+/** Sourced - serving scala for the _good_ of mankind */
 class Sourced extends Responses with Urls with Requests with Auth with IO with unfiltered.Plan {
   import stores.{DocStore, OrgStore}
   import javax.servlet.http.{HttpServletRequest => Req}
