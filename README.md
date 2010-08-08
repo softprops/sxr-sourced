@@ -2,7 +2,7 @@
 
 Serving Scala for the _good_ of mankind
 
-A Simple server for Sxr Docs
+A simple server for [Sxr](http://github.com/harrah/browse) Docs
 
 ### Install
 
@@ -20,23 +20,18 @@ Clone this project
     cd sxr-sourced
     sbt
     update
-    prepare-webapp
     
 ### Starting and Stopping
 
 Within sbt
 
-start with
+start server with
 
     dev-appserver-start
 
-stop with
+stop server with
 
     dev-appserver-stop
-
-### TODO 
-
-* admin feature
 
 ### See Also
 * [sxr-publish](http://github.com/n8han/sxr-publish)

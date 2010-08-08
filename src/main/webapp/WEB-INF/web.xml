@@ -3,17 +3,6 @@
 PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
 "http://java.sun.com/dtd/web-app_2_3.dtd">
 <web-app>
-  <!--<filter>
-    <filter-name>LiftFilter</filter-name>
-    <display-name>Lift Filter</display-name>
-    <description>The Filter that intercepts lift calls</description>
-    <filter-class>implicitly.Filter</filter-class>
-  </filter>
-  <filter-mapping>
-    <filter-name>LiftFilter</filter-name>
-    <url-pattern>/old</url-pattern>
-  </filter-mapping>
-  -->
   <filter>
     <filter-name>Sourced</filter-name>
     <display-name>Sourced Filter</display-name>
