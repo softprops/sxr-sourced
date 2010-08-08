@@ -46,11 +46,11 @@ class Sourced extends Responses with Urls with Requests with Auth with IO with u
       Ok ~> ResponseString(blobs.createUploadUrl("/uploads?path=%s&contentType=%s" format(path, docContentType)))
     
     case POST(Path("/uploads", Params(params,  RequestContentType(contentTypes, req)))) => 
-      Params.Query[String](params) { q =>
+      Params.Query[Unit](params) { q =>
         for {
-          sig <- q("sig") required("sig")
-          orgId <- q("orgId") required("orgId")
-          path <- q("path") required("path")
+          sig <- q("sig") required(())
+          orgId <- q("orgId") required(())
+          path <- q("path") required(())
         } yield {
           blobs.getUploadedBlobs(req).get("src") match {
             case null => BadRequest ~> ResponseString("src file is required")
@@ -69,8 +69,8 @@ class Sourced extends Responses with Urls with Requests with Auth with IO with u
               }  
           }
         }
-      } orElse { errors =>
-        BadRequest ~> ResponseString(errors map("%s is required" format(_)) mkString ". ")
+      } orElse { fails =>
+        BadRequest ~> ResponseString(fails map { fl => "%s is required".format(fl.name) } mkString ". ")
       }
   
       case GET(Path(Seg(org :: project :: version :: srcName :: _), req)) =>
