@@ -38,6 +38,8 @@ class Sourced extends Responses with Urls with Requests with Auth with IO with u
   import com.google.appengine.api.blobstore._
   
   val blobs = BlobstoreServiceFactory.getBlobstoreService
+  val blogInfoFact = new BlobInfoFactory
+  
   def urlencode(str: String) = encode(str, "utf8")
   
   def filter = {
@@ -63,7 +65,7 @@ class Sourced extends Responses with Urls with Requests with Auth with IO with u
               bytesFrom(new BlobstoreInputStream(blobKey)){ bytes =>
                 authorize(sig.get, orgId.get, path.get, bytes) match {
                   case true => {
-                    val docContentType = contentType(path.get) // todo: use blob info's content type here
+                    val docContentType = blogInfoFact.loadBlobInfo(blobKey).getContentType
                     DocStore + (path.get, docContentType, blobKey.getKeyString)
                     response(201, "success")
                   }

@@ -9,6 +9,9 @@ class Doc() {
   @Persistent( valueStrategy = IdGeneratorStrategy.IDENTITY )
   var url: String = _
 
+  /** we can pull this out of the blobstore via 
+   BlobInfoFactory.loadBlobInfo(new BlobKey(blobKey)).getContentType */
+  @Deprecated
   @Persistent
   var contentType: String = _
 
