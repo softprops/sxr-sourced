@@ -31,7 +31,7 @@ class Api extends Urls with Requests with unfiltered.Plan {
 }
 
 /** Sourced - serving scala for the _good_ of mankind */
-class Sourced extends Responses with Urls with Requests with Auth with IO with unfiltered.Plan {
+class Sourced extends Responses with Urls with Requests with Auth with unfiltered.Plan {
   import stores.{DocStore, OrgStore}
   import javax.servlet.http.{HttpServletRequest => Req}
   import java.net.URLEncoder.encode
@@ -62,18 +62,16 @@ class Sourced extends Responses with Urls with Requests with Auth with IO with u
           blobs.getUploadedBlobs(req).get("file") match {
             case null => response(400, "file is required")
             case blobKey =>
-              bytesFrom(new BlobstoreInputStream(blobKey)){ bytes =>
-                authorize(sig.get, orgId.get, path.get, bytes) match {
-                  case true => {
-                    val docContentType = blogInfoFact.loadBlobInfo(blobKey).getContentType
-                    DocStore + (path.get, docContentType, blobKey.getKeyString)
-                    response(201, "success")
-                  }
-                  case _ =>
-                    blobs.delete(blobKey)
-                    response(401, "%s is not a valid sig" format sig.get)
+              authorize(sig.get, orgId.get, path.get, new BlobstoreInputStream(blobKey)) match {
+                case true => {
+                  val docContentType = blogInfoFact.loadBlobInfo(blobKey).getContentType
+                  DocStore + (path.get, docContentType, blobKey.getKeyString)
+                  response(201, "success")
                 }
-              }  
+                case _ =>
+                  blobs.delete(blobKey)
+                  response(401, "%s is not a valid sig" format sig.get)
+              }
           }
         }
       } orElse { fails =>
