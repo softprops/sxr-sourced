@@ -55,9 +55,9 @@ class Sourced extends Responses with Urls with Requests with Auth with Encoding 
       /** send a redirect back to a handler that will respond, as appengine requires */
       def response(status: Int, msg: String) = 
         Redirect("/uploaded?status=%d&msg=%s" format (status, urlencode(msg)))
-      Params.Query[Unit](params) { q =>
-        for {
-          sig <- q("sig") required(())
+        ( for {
+          q <- Params.Query[Unit](params)
+          sig<- q("sig") required(())
           orgId <- q("org") required(())
           path <- q("path") required(())
         } yield {
@@ -74,18 +74,17 @@ class Sourced extends Responses with Urls with Requests with Auth with Encoding 
                   response(401, "%s is not a valid sig" format sig.get)
               }
           }
+        } ) orElse { fails =>
+          response(400, fails map { fl => "%s is required".format(fl.name) } mkString ". ")
         }
-      } orElse { fails =>
-        response(400, fails map { fl => "%s is required".format(fl.name) } mkString ". ")
-      }
 
     case GET(Path("/uploaded", Params(p, _))) =>
-      Params.Query[Unit](p) { q =>
-        for {
-          status <- q("status") is Params.int required(())
-          msg <- q("msg") required(())
-        } yield Status(status.get) ~> ResponseString(msg.get)
-      } orElse { _ => InternalServerError }
+      ( for {
+        q <- Params.Query[Unit](p)
+        status <- q("status") is Params.int required(())
+        msg <- q("msg") required(())
+      } yield Status(status.get) ~> ResponseString(msg.get)
+      ) orElse { _ => InternalServerError }
 
     case GET(Path(Seg(org :: project :: version :: srcName :: _), req)) =>
       DocStore(url(req)) map { src =>
