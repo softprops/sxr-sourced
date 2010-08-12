@@ -30,17 +30,19 @@ class Api extends Urls with Requests with unfiltered.Plan {
   }
 }
 
+trait Encoding {
+  import java.net.URLEncoder.encode
+  def urlencode(str: String) = encode(str, "utf8")
+}
+
 /** Sourced - serving scala for the _good_ of mankind */
-class Sourced extends Responses with Urls with Requests with Auth with unfiltered.Plan {
+class Sourced extends Responses with Urls with Requests with Auth with Encoding with unfiltered.Plan {
   import stores.{DocStore, OrgStore}
   import javax.servlet.http.{HttpServletRequest => Req}
-  import java.net.URLEncoder.encode
   import com.google.appengine.api.blobstore._
   
   val blobs = BlobstoreServiceFactory.getBlobstoreService
   val blogInfoFact = new BlobInfoFactory
-  
-  def urlencode(str: String) = encode(str, "utf8")
   
   def filter = {
     
@@ -64,8 +66,7 @@ class Sourced extends Responses with Urls with Requests with Auth with unfiltere
             case blobKey =>
               authorize(sig.get, orgId.get, path.get, new BlobstoreInputStream(blobKey)) match {
                 case true => {
-                  val docContentType = blogInfoFact.loadBlobInfo(blobKey).getContentType
-                  DocStore + (path.get, docContentType, blobKey.getKeyString)
+                  DocStore + (path.get, blogInfoFact.loadBlobInfo(blobKey).getContentType, blobKey.getKeyString)
                   response(201, "success")
                 }
                 case _ =>
@@ -78,47 +79,47 @@ class Sourced extends Responses with Urls with Requests with Auth with unfiltere
         response(400, fails map { fl => "%s is required".format(fl.name) } mkString ". ")
       }
 
-      case GET(Path("/uploaded", Params(p, _))) =>
-        Params.Query[Unit](p) { q =>
-          for {
-            status <- q("status") is Params.int required(())
-            msg <- q("msg") required(())
-          } yield Status(status.get) ~> ResponseString(msg.get)
-        } orElse { _ => InternalServerError }
+    case GET(Path("/uploaded", Params(p, _))) =>
+      Params.Query[Unit](p) { q =>
+        for {
+          status <- q("status") is Params.int required(())
+          msg <- q("msg") required(())
+        } yield Status(status.get) ~> ResponseString(msg.get)
+      } orElse { _ => InternalServerError }
+
+    case GET(Path(Seg(org :: project :: version :: srcName :: _), req)) =>
+      DocStore(url(req)) map { src =>
+        Option(src.doc) map { doc =>
+          Ok ~> ContentType(src.contentType) ~> ResponseBytes(doc.getBytes)
+        } getOrElse BlobResponder(src.blobKey, blobs)
+      } getOrElse NotFound
   
-      case GET(Path(Seg(org :: project :: version :: srcName :: _), req)) =>
-        DocStore(url(req)) map { src =>
-          Option(src.doc) map { doc =>
-            Ok ~> ContentType(src.contentType) ~> ResponseBytes(doc.getBytes)
-          } getOrElse BlobResponder(src.blobKey, blobs)
-        } getOrElse NotFound
+    case GET(Path(Seg("admin" ::  Nil), req)) => adminPage(req) {
+        <form action="setkey" method="post">
+          <input type="text" name="orgId" />
+          <input type="submit" value="Generate Token" />
+        </form>
+      }
     
-      case GET(Path(Seg("admin" ::  Nil), req)) => adminPage(req) {
-          <form action="setkey" method="post">
-            <input type="text" name="orgId" />
-            <input type="submit" value="Generate Token" />
-          </form>
-        }
-      
-      case GET(Path("/sxr.links", _)) =>
-        val LinkIndex = "^(.+)link\\.index\\.gz$".r
-        PlainTextContent ~> ResponseString(
-          DocStore.withUrls("application/x-gzip") { _.flatMap {
-            case LinkIndex(base) => Some(base)
-            case _ => None
-          } mkString "\n" }
-        )
-  
-      case POST(Path(Seg("setkey" :: Nil), Params(params,req))) =>
-        params("orgId") match {
-          case Seq(orgId) => {
-            val key = generateKey
-            OrgStore + (orgId, key)
-            adminPage(req) {
-              <div> { key } </div>
-            }
+    case GET(Path("/sxr.links", _)) =>
+      val LinkIndex = "^(.+)link\\.index\\.gz$".r
+      PlainTextContent ~> ResponseString(
+        DocStore.withUrls("application/x-gzip") { _.flatMap {
+          case LinkIndex(base) => Some(base)
+          case _ => None
+        } mkString "\n" }
+      )
+
+    case POST(Path(Seg("setkey" :: Nil), Params(params,req))) =>
+      params("orgId") match {
+        case Seq(orgId) => {
+          val key = generateKey
+          OrgStore + (orgId, key)
+          adminPage(req) {
+            <div> { key } </div>
           }
-          case _ => BadRequest ~> ResponseString("orgId required")
         }
+        case _ => BadRequest ~> ResponseString("orgId required")
+      }
   }
 }
