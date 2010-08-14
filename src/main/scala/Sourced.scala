@@ -55,36 +55,37 @@ class Sourced extends Responses with Urls with Requests with Auth with Encoding 
       /** send a redirect back to a handler that will respond, as appengine requires */
       def response(status: Int, msg: String) = 
         Redirect("/uploaded?status=%d&msg=%s" format (status, urlencode(msg)))
-        ( for {
-          q <- Params.Query[Unit](params)
-          sig<- q("sig") required(())
-          orgId <- q("org") required(())
-          path <- q("path") required(())
-        } yield {
-          blobs.getUploadedBlobs(req).get("file") match {
-            case null => response(400, "file is required")
-            case blobKey =>
-              authorize(sig.get, orgId.get, path.get, new BlobstoreInputStream(blobKey)) match {
-                case true => {
-                  DocStore + (path.get, blogInfoFact.loadBlobInfo(blobKey).getContentType, blobKey.getKeyString)
-                  response(201, "success")
-                }
-                case _ =>
-                  blobs.delete(blobKey)
-                  response(401, "%s is not a valid sig" format sig.get)
+      val expected = for {
+        q <- Params.Query.errors[Unit]
+        sig<- q("sig") required(())
+        orgId <- q("org") required(())
+        path <- q("path") required(())
+      } yield {
+        blobs.getUploadedBlobs(req).get("file") match {
+          case null => response(400, "file is required")
+          case blobKey =>
+            authorize(sig.get, orgId.get, path.get, new BlobstoreInputStream(blobKey)) match {
+              case true => {
+                DocStore + (path.get, blogInfoFact.loadBlobInfo(blobKey).getContentType, blobKey.getKeyString)
+                response(201, "success")
               }
-          }
-        } ) orElse { fails =>
-          response(400, fails map { fl => "%s is required".format(fl.name) } mkString ". ")
+              case _ =>
+                blobs.delete(blobKey)
+                response(401, "%s is not a valid sig" format sig.get)
+            }
         }
+      }
+      expected(params) orFail { fails =>
+        response(400, fails map { fl => "%s is required".format(fl.name) } mkString ". ")
+      }
 
     case GET(Path("/uploaded", Params(p, _))) =>
-      ( for {
-        q <- Params.Query[Unit](p)
+      val expected = for {
+        q <- Params.Query.errors[Unit]
         status <- q("status") is Params.int required(())
         msg <- q("msg") required(())
       } yield Status(status.get) ~> ResponseString(msg.get)
-      ) orElse { _ => InternalServerError }
+      expected(p) orFail { _ => InternalServerError }
 
     case GET(Path(Seg(org :: project :: version :: srcName :: _), req)) =>
       DocStore(url(req)) map { src =>
