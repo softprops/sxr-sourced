@@ -57,15 +57,18 @@ class Sourced extends Responses with Urls with Requests with Auth with Encoding 
         Redirect("/uploaded?status=%d&msg=%s" format (status, urlencode(msg)))
       val expected = for {
         q <- Params.Query.errors[Unit]
-        sig<- q("sig") required(())
-        orgId <- q("org") required(())
-        path <- q("path") required(())
+        sig<- q("sig") required()
+        orgId <- q("org") required()
+        path <- q("path") required()
       } yield {
         blobs.getUploadedBlobs(req).get("file") match {
           case null => response(400, "file is required")
           case blobKey =>
             authorize(sig.get, orgId.get, path.get, new BlobstoreInputStream(blobKey)) match {
               case true => {
+                DocStore(path.get) flatMap{ d => Option(d.blobKey) } foreach { oldKey =>
+                  blobs.delete(new BlobKey(oldKey))
+                }
                 DocStore + (path.get, blogInfoFact.loadBlobInfo(blobKey).getContentType, blobKey.getKeyString)
                 response(201, "success")
               }
@@ -83,7 +86,7 @@ class Sourced extends Responses with Urls with Requests with Auth with Encoding 
       val expected = for {
         q <- Params.Query.errors[Unit]
         status <- q("status") is Params.int required(())
-        msg <- q("msg") required(())
+        msg <- q("msg") required()
       } yield Status(status.get) ~> ResponseString(msg.get)
       expected(p) orFail { _ => InternalServerError }
 
