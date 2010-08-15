@@ -85,7 +85,7 @@ class Sourced extends Responses with Urls with Requests with Auth with Encoding 
     case GET(Path("/uploaded", Params(p, _))) =>
       val expected = for {
         q <- Params.Query.errors[Unit]
-        status <- q("status") is Params.int required(())
+        status <- q("status") is Params.int required()
         msg <- q("msg") required()
       } yield Status(status.get) ~> ResponseString(msg.get)
       expected(p) orFail { _ => InternalServerError }
