@@ -40,12 +40,14 @@ class Sourced extends Responses with Urls with Requests with Auth with Encoding 
   import stores.{DocStore, OrgStore}
   import javax.servlet.http.{HttpServletRequest => Req}
   import com.google.appengine.api.blobstore._
+  import QParams._
+
   
   val blobs = BlobstoreServiceFactory.getBlobstoreService
   val blogInfoFact = new BlobInfoFactory
   
   def filter = {
-    
+
     case POST(Path(Seg(org :: project :: version :: srcName :: _), req)) => 
       Ok ~> ResponseString(blobs.createUploadUrl(
         "/upload?org=%s&path=%s" format (urlencode(org), urlencode(url(req)))
@@ -56,10 +58,9 @@ class Sourced extends Responses with Urls with Requests with Auth with Encoding 
       def response(status: Int, msg: String) = 
         Redirect("/uploaded?status=%d&msg=%s" format (status, urlencode(msg)))
       val expected = for {
-        q <- Params.Query.errors[Unit]
-        sig<- q("sig") required()
-        orgId <- q("org") required()
-        path <- q("path") required()
+        sig<- lookup("sig") is(required())
+        orgId <- lookup("org") is(required())
+        path <- lookup("path") is(required())
       } yield {
         blobs.getUploadedBlobs(req).get("file") match {
           case null => response(400, "file is required")
@@ -84,9 +85,8 @@ class Sourced extends Responses with Urls with Requests with Auth with Encoding 
 
     case GET(Path("/uploaded", Params(p, _))) =>
       val expected = for {
-        q <- Params.Query.errors[Unit]
-        status <- q("status") is Params.int required()
-        msg <- q("msg") required()
+        status <- lookup("status") is(int()) is(required())
+        msg <- lookup("msg") is(required())
       } yield Status(status.get) ~> ResponseString(msg.get)
       expected(p) orFail { _ => InternalServerError }
 
