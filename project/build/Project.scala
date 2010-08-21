@@ -1,8 +1,6 @@
 import sbt._
 
 class Project(info: ProjectInfo) extends AppengineProject(info) with DataNucleus {
-  //val snapshots = ScalaToolsSnapshots  
-  val snapshots = "Scala Tools Snapshots" at "http://www.scala-tools.org/repo-snapshots/"
   lazy val specs = specsDependency
   def specsDependency =
     if (buildScalaVersion startsWith "2.7.")
@@ -15,7 +13,7 @@ class Project(info: ProjectInfo) extends AppengineProject(info) with DataNucleus
   val appengineRepo = "nexus" at "http://maven-gae-plugin.googlecode.com/svn/repository/"
   
   // unfiltered
-  val uf = "net.databinder" %% "unfiltered" % "0.1.4-SNAPSHOT"
+  val uf = "net.databinder" %% "unfiltered" % "0.1.4"
 
   // security
   val codec = "commons-codec" % "commons-codec" % "1.4"
