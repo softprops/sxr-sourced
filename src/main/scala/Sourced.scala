@@ -91,10 +91,14 @@ class Sourced extends Responses with Urls with Requests with Auth with Encoding 
       expected(p) orFail { _ => InternalServerError }
 
     case GET(Path(Seg(org :: project :: version :: srcName :: _), req)) =>
-      DocStore(url(req)) map { src =>
-        Option(src.doc) map { doc =>
-          Ok ~> ContentType(src.contentType) ~> ResponseBytes(doc.getBytes)
-        } getOrElse BlobResponder(src.blobKey, blobs)
+      DocStore(url(req)) flatMap { src =>
+        Option(src.blobKey) map { key =>
+          BlobResponder(key, blobs)
+        } orElse {
+          Option(src.doc) map { doc =>
+            Ok ~> ContentType(src.contentType) ~> ResponseBytes(doc.getBytes)
+          }
+        } 
       } getOrElse NotFound
   
     case GET(Path(Seg("admin" ::  Nil), req)) => adminPage(req) {
