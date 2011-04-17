@@ -14,7 +14,7 @@ class Project(info: ProjectInfo) extends AppengineProject(info) with DataNucleus
   
   // unfiltered
   val uf = "net.databinder" %% "unfiltered" % "0.1.4"
-
+  val serletApi = "javax.servlet" % "servlet-api" % "2.3" % "provided"
   // security
   val codec = "commons-codec" % "commons-codec" % "1.4"
    
