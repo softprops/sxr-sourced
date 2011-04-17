@@ -39,16 +39,14 @@ trait Encoding {
 /** Sourced - serving scala for the _good_ of mankind */
 class Sourced extends Responses with Urls with Requests with Auth with Encoding with unfiltered.filter.Plan {
   import stores.{DocStore, OrgStore}
-  import javax.servlet.http.{HttpServletRequest => Req}
+  import javax.servlet.http.{HttpServletRequest => Req, HttpServletResponse}
   import com.google.appengine.api.blobstore._
   import QParams._
 
-  
   val blobs = BlobstoreServiceFactory.getBlobstoreService
   val blogInfoFact = new BlobInfoFactory
   
   def intent = {
-
     case req @ POST(Path(Seg(org :: project :: version :: srcName :: _))) => 
       Ok ~> ResponseString(blobs.createUploadUrl(
         "/upload?org=%s&path=%s" format (urlencode(org),
@@ -86,13 +84,6 @@ class Sourced extends Responses with Urls with Requests with Auth with Encoding 
         response(400, fails map { fl => "%s is required".format(fl.name) } mkString ". ")
       }
 
-    case GET(Path("/uploaded") & Params(p)) =>
-      val expected = for {
-        status <- lookup("status") is(int(_ => ())) is(required())
-        msg <- lookup("msg") is(required())
-      } yield Status(status.get) ~> ResponseString(msg.get)
-      expected(p) orFail { _ => InternalServerError }
-
     case req @ GET(Path(Seg(org :: project :: version :: srcName :: _))) =>
       DocStore(url(req.underlying)) flatMap { src =>
         Option(src.blobKey) map { key =>
@@ -103,6 +94,21 @@ class Sourced extends Responses with Urls with Requests with Auth with Encoding 
           }
         } 
       } getOrElse NotFound
+
+  }
+}
+class Sourced2 extends Responses with Urls with Requests with Auth with Encoding with unfiltered.filter.Plan {
+  import stores.{DocStore, OrgStore}
+  import javax.servlet.http.{HttpServletRequest => Req, HttpServletResponse}
+  import QParams._
+
+  def intent = {
+    case GET(Path("/uploaded") & Params(p)) =>
+      val expected = for {
+        status <- lookup("status") is(int(_ => ())) is(required())
+        msg <- lookup("msg") is(required())
+      } yield Status(status.get) ~> ResponseString(msg.get)
+      expected(p) orFail { _ => InternalServerError }
   
     case req @ GET(Path(Seg("admin" ::  Nil))) => adminPage(req.underlying) {
         <form action="setkey" method="post">

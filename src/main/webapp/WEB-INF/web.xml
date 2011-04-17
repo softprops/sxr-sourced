@@ -15,6 +15,17 @@ PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
     <dispatcher>FORWARD</dispatcher>
   </filter-mapping>
   <filter>
+    <filter-name>Sourced2</filter-name>
+    <display-name>Sourced Filter2</display-name>
+    <filter-class>implicitly.Sourced2</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>Sourced2</filter-name>
+    <url-pattern>/*</url-pattern>
+    <dispatcher>REQUEST</dispatcher>
+    <dispatcher>FORWARD</dispatcher>
+  </filter-mapping>
+  <filter>
     <filter-name>SourcedUpload</filter-name>
     <display-name>Sourced Upload Filter</display-name>
     <filter-class>implicitly.Sourced</filter-class>
