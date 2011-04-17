@@ -4,7 +4,7 @@ import unfiltered.request._
 import unfiltered.response._
 
 /** Public Sourced `api` */
-class Api extends Urls with Requests with unfiltered.Plan {
+class Api extends Urls with Requests with unfiltered.filter.Plan {
   import stores.DocStore
   import javax.servlet.http.{HttpServletRequest => Req}
 
@@ -13,11 +13,12 @@ class Api extends Urls with Requests with unfiltered.Plan {
       org, proj, vers, url, "Date(%s)" format(createdAt.getTime))
   }
     
-  def filter = {
-    case GET(Path(Seg("api" :: "recent" :: Nil), Params(params, req))) =>
-      val Index = ("^"+hostUrl(req).replace(".", "[.]")+"/(.+)/(.+)/(.+)/index\\.html$").r
+  def intent = {
+    case req @ GET(Path(Seg("api" :: "recent" :: Nil)) & Params(params)) =>
+      val hreq = req.underlying
+      val Index = ("^"+hostUrl(hreq).replace(".", "[.]")+"/(.+)/(.+)/(.+)/index\\.html$").r
       val js = DocStore.recent("text/html") { _.flatMap {
-        case Array(Index(org, proj, vers), created: java.util.Date) => Some(Src(org, proj, vers, (hostUrl(req) :: org :: proj :: vers :: "index.html" :: Nil) mkString("/"), created) asJson)
+        case Array(Index(org, proj, vers), created: java.util.Date) => Some(Src(org, proj, vers, (hostUrl(hreq) :: org :: proj :: vers :: "index.html" :: Nil) mkString("/"), created) asJson)
         case _ => None
       } take(10) mkString("[", ",", "]") }
       
@@ -36,7 +37,7 @@ trait Encoding {
 }
 
 /** Sourced - serving scala for the _good_ of mankind */
-class Sourced extends Responses with Urls with Requests with Auth with Encoding with unfiltered.Plan {
+class Sourced extends Responses with Urls with Requests with Auth with Encoding with unfiltered.filter.Plan {
   import stores.{DocStore, OrgStore}
   import javax.servlet.http.{HttpServletRequest => Req}
   import com.google.appengine.api.blobstore._
@@ -46,23 +47,25 @@ class Sourced extends Responses with Urls with Requests with Auth with Encoding 
   val blobs = BlobstoreServiceFactory.getBlobstoreService
   val blogInfoFact = new BlobInfoFactory
   
-  def filter = {
+  def intent = {
 
-    case POST(Path(Seg(org :: project :: version :: srcName :: _), req)) => 
+    case req @ POST(Path(Seg(org :: project :: version :: srcName :: _))) => 
       Ok ~> ResponseString(blobs.createUploadUrl(
-        "/upload?org=%s&path=%s" format (urlencode(org), urlencode(url(req)))
+        "/upload?org=%s&path=%s" format (urlencode(org),
+                                         urlencode(url(req.underlying)))
       ))
     
-    case Path("/upload", Params(params,  req)) =>
+    case req @ Path("/upload") & Params(params) =>
       /** send a redirect back to a handler that will respond, as appengine requires */
       def response(status: Int, msg: String) = 
         Redirect("/uploaded?status=%d&msg=%s" format (status, urlencode(msg)))
+      val hreq = req.underlying
       val expected = for {
         sig<- lookup("sig") is(required())
         orgId <- lookup("org") is(required())
         path <- lookup("path") is(required())
       } yield {
-        blobs.getUploadedBlobs(req).get("file") match {
+        blobs.getUploadedBlobs(hreq).get("file") match {
           case null => response(400, "file is required")
           case blobKey =>
             authorize(sig.get, orgId.get, path.get, new BlobstoreInputStream(blobKey)) match {
@@ -83,15 +86,15 @@ class Sourced extends Responses with Urls with Requests with Auth with Encoding 
         response(400, fails map { fl => "%s is required".format(fl.name) } mkString ". ")
       }
 
-    case GET(Path("/uploaded", Params(p, _))) =>
+    case GET(Path("/uploaded") & Params(p)) =>
       val expected = for {
-        status <- lookup("status") is(int()) is(required())
+        status <- lookup("status") is(int(_ => ())) is(required())
         msg <- lookup("msg") is(required())
       } yield Status(status.get) ~> ResponseString(msg.get)
       expected(p) orFail { _ => InternalServerError }
 
-    case GET(Path(Seg(org :: project :: version :: srcName :: _), req)) =>
-      DocStore(url(req)) flatMap { src =>
+    case req @ GET(Path(Seg(org :: project :: version :: srcName :: _))) =>
+      DocStore(url(req.underlying)) flatMap { src =>
         Option(src.blobKey) map { key =>
           BlobResponder(key, blobs)
         } orElse {
@@ -101,14 +104,14 @@ class Sourced extends Responses with Urls with Requests with Auth with Encoding 
         } 
       } getOrElse NotFound
   
-    case GET(Path(Seg("admin" ::  Nil), req)) => adminPage(req) {
+    case req @ GET(Path(Seg("admin" ::  Nil))) => adminPage(req.underlying) {
         <form action="setkey" method="post">
           <input type="text" name="orgId" />
           <input type="submit" value="Generate Token" />
         </form>
       }
     
-    case GET(Path("/sxr.links", _)) =>
+    case GET(Path("/sxr.links")) =>
       val LinkIndex = "^(.+)link\\.index\\.gz$".r
       PlainTextContent ~> ResponseString(
         DocStore.withUrls("application/x-gzip") { _.flatMap {
@@ -117,12 +120,12 @@ class Sourced extends Responses with Urls with Requests with Auth with Encoding 
         } mkString "\n" }
       )
 
-    case POST(Path(Seg("setkey" :: Nil), Params(params,req))) =>
+    case req @ POST(Path(Seg("setkey" :: Nil)) & Params(params)) =>
       params("orgId") match {
         case Seq(orgId) => {
           val key = generateKey
           OrgStore + (orgId, key)
-          adminPage(req) {
+          adminPage(req.underlying) {
             <div> { key } </div>
           }
         }

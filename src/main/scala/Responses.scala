@@ -2,13 +2,15 @@ package implicitly
 
 /** Custom Response types */
 trait Responses { this: Urls =>
-  import javax.servlet.http.{HttpServletRequest => Req}
+  import javax.servlet.http.{HttpServletRequest => Req, HttpServletResponse}
   import unfiltered.response._
   
   import com.google.appengine.api.blobstore._
   
-  case class BlobResponder(bk: String, blobs: BlobstoreService) extends Responder {
-    def respond(res: javax.servlet.http.HttpServletResponse) = blobs.serve(new BlobKey(bk), res)
+  case class BlobResponder(bk: String, blobs: BlobstoreService) 
+      extends Responder[HttpServletResponse] {
+    def respond(res: HttpResponse[HttpServletResponse]) = 
+      blobs.serve(new BlobKey(bk), res.underlying)
   }
   
   def adminPage(req: Req)(out: => scala.xml.Node) = {
