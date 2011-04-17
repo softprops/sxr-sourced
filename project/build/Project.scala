@@ -17,5 +17,5 @@ class Project(info: ProjectInfo) extends AppengineProject(info) with DataNucleus
   val codec = "commons-codec" % "commons-codec" % "1.4"
    
   // persistence
-  val jdo = "javax.jdo" % "jdo2-api" % "2.3-ea"
+  val jdo = "javax.jdo" % "jdo2-api" % "2.3-eb"
 }
